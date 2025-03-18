@@ -71,7 +71,7 @@ export default function ToolsDashboard() {
   const [salesData, setSalesData] = useState<Sale[]>([]);
   const [uploading, setUploading] = useState<boolean>(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
-  const [selectedReport, setSelectedReport] = useState<string>('total-sales');
+  const [selectedReport, setSelectedReport] = useState<string>('sales-growth'); // Default to "sales-growth"
   const [dateRange, setDateRange] = useState<DateRange>({ start: '2025-01-01', end: '2025-12-31' });
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [selectedStates, setSelectedStates] = useState<string[]>([]);
@@ -82,7 +82,7 @@ export default function ToolsDashboard() {
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState<boolean>(false);
   const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState<boolean>(false);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
-  const [trendType, setTrendType] = useState<'daily' | 'weekly' | 'monthly'>('daily'); // New state for trend type
+  const [trendType, setTrendType] = useState<'daily' | 'weekly' | 'monthly'>('daily');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const productRef = useRef<HTMLDivElement>(null);
@@ -108,72 +108,36 @@ export default function ToolsDashboard() {
     }
 
     setUploading(true);
-    console.log('Starting file load:', fileToUpload.name);
+    Papa.parse(fileToUpload, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (result: Papa.ParseResult<any>) => {
+        const parsedData = result.data
+          .filter(row => row.date && row.product)
+          .map((row: any, index: number) => ({
+            id: salesData.length + index + 1,
+            user_id: user.id,
+            date: row.date || '',
+            product: row.product || '',
+            state: row.state || '',
+            country: row.country || '',
+            customer: row.customer || '',
+            sales: parseFloat(row.sales) || 0,
+            quantity: parseInt(row.quantity, 10) || 0,
+          }));
 
-    try {
-      Papa.parse(fileToUpload, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (result: Papa.ParseResult<any>) => {
-          try {
-            console.log('CSV headers:', result.meta.fields);
-            console.log('Raw parsed data:', result.data);
-
-            const parsedData = result.data
-              .filter(row => row.date && row.product)
-              .map((row: any, index: number) => ({
-                id: salesData.length + index + 1,
-                user_id: user.id,
-                date: row.date || '',
-                product: row.product || '',
-                state: row.state || '',
-                country: row.country || '',
-                customer: row.customer || '',
-                sales: parseFloat(row.sales) || 0,
-                quantity: parseInt(row.quantity, 10) || 0,
-              }));
-
-            if (parsedData.length === 0) {
-              console.error('No valid data found in CSV');
-              alert('No valid data found in the uploaded CSV');
-              setUploading(false);
-              return;
-            }
-
-            console.log('Processed data:', parsedData);
-
-            setSalesData((prevData) => {
-              const newData = [...prevData, ...parsedData];
-              console.log('Updated salesData:', newData);
-              return newData;
-            });
-
-            alert('Sales data loaded successfully!');
-            setIsUploadModalOpen(false);
-            setFileToUpload(null);
-            if (fileInputRef.current) {
-              fileInputRef.current.value = '';
-            }
-
-            console.log('Data load completed successfully');
-          } catch (error) {
-            console.error('Error processing parsed data:', error);
-            alert('Failed to process data. Check console for details.');
-          } finally {
-            setUploading(false);
-          }
-        },
-        error: (error: Error) => {
-          console.error('Papa Parse error:', error.message);
-          alert('Error parsing CSV file. Please check the file format.');
-          setUploading(false);
-        },
-      });
-    } catch (error) {
-      console.error('Load failed:', error);
-      alert('Failed to load sales data. Check console for details.');
-      setUploading(false);
-    }
+        setSalesData((prevData) => [...prevData, ...parsedData]);
+        alert('Sales data loaded successfully!');
+        setIsUploadModalOpen(false);
+        setFileToUpload(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        setUploading(false);
+      },
+      error: () => {
+        alert('Error parsing CSV file. Please check the file format.');
+        setUploading(false);
+      },
+    });
   };
 
   const downloadSampleCSV = () => {
@@ -193,15 +157,10 @@ export default function ToolsDashboard() {
   };
 
   const handleSignOut = async () => {
-    try {
-      await signOut();
-      navigate('/tools');
-    } catch (error) {
-      console.error('Sign-out error:', (error as Error).message);
-    }
+    await signOut();
+    navigate('/tools');
   };
 
-  // Aggregate data based on trend type
   const aggregateData = (data: Sale[], trend: 'daily' | 'weekly' | 'monthly') => {
     const groupedData: Record<string, Sale[]> = {};
     data.forEach((sale) => {
@@ -287,14 +246,18 @@ export default function ToolsDashboard() {
     const trendLabel = trendType === 'daily' ? 'day' : trendType === 'weekly' ? 'week' : 'month';
 
     switch (selectedReport) {
-      case 'total-sales':
+      case 'sales-growth':
         return {
-          title: `Total Sales Insights (${trendType.charAt(0).toUpperCase() + trendType.slice(1)})`,
+          title: `Sales Growth Insights (${trendType.charAt(0).toUpperCase() + trendType.slice(1)})`,
           items: [
             {
               sales: totalSales,
               insight: [
+                `Sales at $${totalSales.toFixed(2)} with ${growthRate.toFixed(1)}% ${isGrowth ? `${trendLabel}ly climb—epic!` : `${trendLabel}ly dip—pivot time!`}`,
                 `Your total sales hit $${totalSales.toFixed(2)}—${isGrowth ? `a ${trendLabel}ly climb worth riding!` : `a ${trendLabel}ly dip to tackle!`}`,
+                `- **Peak Push**: ${isGrowth ? `Rerun this ${trendLabel}’s best promo.` : `Test a fresh promo this ${trendLabel}.`}`,
+                `- **Seasonal Prep**: ${isGrowth ? `Stock up early if this ${trendLabel}’s seasonal.` : `Counter seasonal drags this ${trendLabel}.`}`,
+                `- **Channel Test**: ${isGrowth ? `Test a new platform this ${trendLabel}.` : `Stabilize core channels first.`}`,
                 `- **Top Performers**: Check "Sales by Product" to ${isGrowth ? 'amplify what’s hot' : 'revive what’s off'}.`,
                 `- **New Markets**: ${isGrowth ? `Use this ${trendLabel}’s cash to test a new channel.` : 'Focus on core sales to stabilize.'}`,
                 `- **Cost Check**: Cut 5%—that’s $${(totalSales * 0.05).toFixed(2)} to ${isGrowth ? 'reinvest' : 'cushion'}.`,
@@ -484,22 +447,6 @@ export default function ToolsDashboard() {
           ],
         };
 
-      case 'sales-growth':
-        return {
-          title: `Sales Growth Insights (${trendType.charAt(0).toUpperCase() + trendType.slice(1)})`,
-          items: [
-            {
-              sales: totalSales,
-              insight: [
-                `Sales at $${totalSales.toFixed(2)} with ${growthRate.toFixed(1)}% ${isGrowth ? `${trendLabel}ly climb—epic!` : `${trendLabel}ly dip—pivot time!`}`,
-                `- **Peak Push**: ${isGrowth ? `Rerun this ${trendLabel}’s best promo.` : `Test a fresh promo this ${trendLabel}.`}`,
-                `- **Seasonal Prep**: ${isGrowth ? `Stock up early if this ${trendLabel}’s seasonal.` : `Counter seasonal drags this ${trendLabel}.`}`,
-                `- **Channel Test**: ${isGrowth ? `Test a new platform this ${trendLabel}.` : `Stabilize core channels first.`}`,
-              ],
-            },
-          ],
-        };
-
       case 'product-performance':
         return {
           title: `Product Performance Insights (${trendType.charAt(0).toUpperCase() + trendType.slice(1)})`,
@@ -619,41 +566,60 @@ export default function ToolsDashboard() {
 
   const getSummaryInsights = () => {
     switch (selectedReport) {
-      case 'total-sales':
+      case 'sales-growth':
+        const firstSales = aggregatedData.length > 0 ? aggregatedData[0].sales : 0;
+        const lastSales = aggregatedData.length > 0 ? aggregatedData[aggregatedData.length - 1].sales : 0;
+        const growthRate = firstSales > 0 ? (((lastSales - firstSales) / firstSales) * 100).toFixed(1) : 'N/A';
+        const highestSales = aggregatedData.length > 0 ? Math.max(...aggregatedData.map(d => d.sales)).toFixed(2) : '0.00';
+        const trendLabel = trendType === 'daily' ? 'Day' : trendType === 'weekly' ? 'Week' : 'Month';
+
         return [
-          { title: 'Total Sales', value: `$${totalSales.toFixed(2)}`, description: `Your total sales for the selected period.` },
-          { title: 'Total Orders', value: totalOrders.toString(), description: `Total number of orders placed.` },
-          { title: 'Unique Customers', value: repeatCustomers.toString(), description: `Number of unique customers who made purchases.` },
+          {
+            title: 'Sales Growth Rate',
+            value: `${growthRate}%`,
+            description: `Sales growth from the first to the last ${trendLabel.toLowerCase()}.`,
+          },
+          {
+            title: 'Total Sales',
+            value: `$${totalSales.toFixed(2)}`,
+            description: `Total sales for the period.`,
+          },
+          {
+            title: `Highest Sales`,
+            value: `$${highestSales}`,
+            description: `Highest sales in a single ${trendLabel.toLowerCase()}.`,
+          },
         ];
+
       case 'sales-by-product':
         return [
           { title: 'Top Product', value: topProductsBySales[0]?.product || 'N/A', description: `Top product by sales: $${topProductsBySales[0]?.sales.toFixed(2) || 0}.` },
           { title: 'Total Products Sold', value: [...new Set(filteredData.map(sale => sale.product))].length.toString(), description: `Number of unique products sold.` },
           { title: 'Average Sales per Product', value: `$${([...new Set(filteredData.map(sale => sale.product))].length > 0 ? totalSales / [...new Set(filteredData.map(sale => sale.product))].length : 0).toFixed(2)}`, description: `Average sales per product.` },
         ];
+
       case 'sales-by-region':
         return [
           { title: 'Top Region', value: topRegionsBySales[0]?.region || 'N/A', description: `Top region by sales: $${topRegionsBySales[0]?.sales.toFixed(2) || 0}.` },
           { title: 'Total Regions', value: [...new Set(filteredData.map(sale => `${sale.state}, ${sale.country}`))].length.toString(), description: `Number of regions with sales.` },
           { title: 'Average Sales per Region', value: `$${([...new Set(filteredData.map(sale => `${sale.state}, ${sale.country}`))].length > 0 ? totalSales / [...new Set(filteredData.map(sale => `${sale.state}, ${sale.country}`))].length : 0).toFixed(2)}`, description: `Average sales per region.` },
         ];
+
       case 'customer-lifetime-value':
         return [
           { title: 'Top Customer', value: topCustomersBySales[0]?.customer || 'N/A', description: `Top customer by CLV: $${topCustomersBySales[0]?.sales.toFixed(2) || 0}.` },
           { title: 'Average CLV', value: `$${(repeatCustomers > 0 ? totalSales / repeatCustomers : 0).toFixed(2)}`, description: `Average customer lifetime value.` },
           { title: 'Total Customers', value: repeatCustomers.toString(), description: `Total unique customers.` },
         ];
+
       case 'average-order-value':
         return [
           { title: 'Average Order Value', value: `$${avgOrderValue}`, description: `Average value per order.` },
           { title: 'Total Orders', value: totalOrders.toString(), description: `Total number of orders.` },
           { title: 'Highest Order Value', value: `$${Math.max(...filteredData.map(sale => sale.sales), 0).toFixed(2)}`, description: `Highest single order value.` },
         ];
+
       case 'repeat-purchase-rate':
-        const customerPurchaseCounts = filteredData.reduce((acc, sale) => {
-          acc[sale.customer] = (acc[sale.customer] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>);
         const repeatCustomerCount = Object.values(customerPurchaseCounts).filter(count => count > 1).length;
         const totalUniqueCustomers = Object.keys(customerPurchaseCounts).length;
         const repeatPurchaseRate = totalUniqueCustomers > 0 ? (repeatCustomerCount / totalUniqueCustomers) * 100 : 0;
@@ -662,37 +628,14 @@ export default function ToolsDashboard() {
           { title: 'Repeat Customers', value: repeatCustomerCount.toString(), description: `Number of customers with multiple purchases.` },
           { title: 'Total Customers', value: totalUniqueCustomers.toString(), description: `Total unique customers in the filtered data.` },
         ];
-        case 'sales-growth':
-          // Use aggregatedData which is already grouped by trendType
-          const firstSales = aggregatedData.length > 0 ? aggregatedData[0].sales : 0;
-          const lastSales = aggregatedData.length > 0 ? aggregatedData[aggregatedData.length - 1].sales : 0;
-          const growthRate = firstSales > 0 ? (((lastSales - firstSales) / firstSales) * 100).toFixed(1) : 'N/A';
-          const highestSales = aggregatedData.length > 0 ? Math.max(...aggregatedData.map(d => d.sales)).toFixed(2) : '0.00';
-          const trendLabel = trendType === 'daily' ? 'Day' : trendType === 'weekly' ? 'Week' : 'Month';
-        
-          return [
-            {
-              title: 'Sales Growth Rate',
-              value: `${growthRate}%`,
-              description: `Sales growth from the first to the last ${trendLabel.toLowerCase()}.`,
-            },
-            {
-              title: 'Total Sales',
-              value: `$${totalSales.toFixed(2)}`,
-              description: `Total sales for the period.`,
-            },
-            {
-              title: `Highest Sales`,
-              value: `$${highestSales}`,
-              description: `Highest sales in a single ${trendLabel.toLowerCase()}.`,
-            },
-          ];
+
       case 'product-performance':
         return [
           { title: 'Top Product by Units', value: topProductsBySales[0]?.product || 'N/A', description: `Top product by units sold: ${filteredData.filter(sale => sale.product === topProductsBySales[0]?.product).reduce((sum, sale) => sum + sale.quantity, 0)} units.` },
           { title: 'Total Units Sold', value: totalQuantity.toString(), description: `Total units sold across all products.` },
           { title: 'Average Units per Product', value: `${([...new Set(filteredData.map(sale => sale.product))].length > 0 ? totalQuantity / [...new Set(filteredData.map(sale => sale.product))].length : 0).toFixed(1)}`, description: `Average units sold per product.` },
         ];
+
       case 'customer-acquisition':
         const acquisitionDates = [...new Set(filteredData.map(sale => sale.date))].sort();
         const newCustomersFirstDay = acquisitionDates.length > 0 ? [...new Set(filteredData.filter(sale => sale.date === acquisitionDates[0]).map(sale => sale.customer))].length : 0;
@@ -702,32 +645,13 @@ export default function ToolsDashboard() {
           { title: 'First Day New Customers', value: newCustomersFirstDay.toString(), description: `New customers on the first day.` },
           { title: 'Last Day New Customers', value: newCustomersLastDay.toString(), description: `New customers on the last day.` },
         ];
+
       default:
         return [];
     }
   };
 
   const summaryInsights = getSummaryInsights();
-
-  const totalSalesChartData: ChartData<'bar'> = {
-    labels: aggregatedData
-      .slice(-30) // Limit to last 30 days for readability, adjust as needed
-      .map((d) => {
-        const date = new Date(d.date);
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); // e.g., "Jan 1"
-      }),
-    datasets: [
-      {
-        label: 'Sales',
-        data: aggregatedData.slice(-30).map((d) => d.sales), // Match data to sliced labels
-        backgroundColor: 'rgba(251, 191, 36, 0.9)',
-        borderColor: 'rgba(251, 146, 60, 1)',
-        borderWidth: 2,
-        barThickness: 20,
-        borderRadius: 10,
-      },
-    ],
-  };
 
   const salesByProductChartData: ChartData<'bar'> = {
     labels: topProductsBySales.map(p => p.product),
@@ -816,7 +740,6 @@ export default function ToolsDashboard() {
   };
 
   const chartOptionsByReport = {
-    'total-sales': { ...trendyChartOptions, plugins: { ...trendyChartOptions.plugins, title: { text: `Total Sales (${trendType})` }, datalabels: { formatter: (value) => `$${value.toFixed(2)}` } }, scales: { y: { ...trendyChartOptions.scales.y, title: { text: 'Sales ($)' } }, x: { ...trendyChartOptions.scales.x, title: { text: 'Period' } } } },
     'sales-by-product': { ...trendyChartOptions, plugins: { ...trendyChartOptions.plugins, title: { text: `Sales by Product (${trendType})` }, datalabels: { formatter: (value) => `$${value.toFixed(2)}` } }, scales: { y: { ...trendyChartOptions.scales.y, title: { text: 'Sales ($)' } }, x: { ...trendyChartOptions.scales.x, title: { text: 'Products' } } } },
     'sales-by-region': { ...trendyChartOptions, plugins: { ...trendyChartOptions.plugins, title: { text: `Sales by Region (${trendType})` }, datalabels: { formatter: (value) => `$${value.toFixed(2)}` } }, scales: { y: { ...trendyChartOptions.scales.y, title: { text: 'Sales ($)' } }, x: { ...trendyChartOptions.scales.x, title: { text: 'Regions' } } } },
     'customer-lifetime-value': { ...trendyChartOptions, plugins: { ...trendyChartOptions.plugins, title: { text: `Customer Lifetime Value (${trendType})` }, datalabels: { formatter: (value) => `$${value.toFixed(2)}` } }, scales: { y: { ...trendyChartOptions.scales.y, title: { text: 'Lifetime Value ($)' } }, x: { ...trendyChartOptions.scales.x, title: { text: 'Customers' } } } },
@@ -872,64 +795,52 @@ export default function ToolsDashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-  <div className="bg-gray-800 rounded-xl shadow-lg p-6 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <div className="w-full">
-        <h3 className="text-lg font-bold text-yellow-300 mb-4 flex items-center">
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-          Launch Pad
-        </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-          <a href="/tools-dashboard" className="group relative px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 rounded-lg font-semibold text-sm flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-yellow-300">
-            <BarChart2 className="w-4 h-4 mr-2" /> Sales Dashboard
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">Hot</span>
-          </a>
-          <a href="/sales-forecasting" className="group relative px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-800 text-white rounded-lg font-semibold text-sm flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-yellow-300">
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 3.055A9.001 9.001 0 1012 21a9 9 0 00-9-9" />
-            </svg>
-            Sales Forecasting
-            <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 hidden group-hover:block px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap z-10">
-              Predict Your Future
-            </span>
-          </a>
-          <a href="/seo-analysis" className="group relative px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-800 text-white rounded-lg font-semibold text-sm flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-yellow-300">
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 11c0-1.1-.9-2-2-2s-2 .9-2 2 2 4 2 4 2-2.9 2-4z" />
-            </svg>
-            SEO Analysis
-            <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 hidden group-hover:block px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap z-10">
-              Boost Your Rankings
-            </span>
-          </a>
-          <a href="/pricing-optimizer" className="group relative px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-800 text-white rounded-lg font-semibold text-sm flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-yellow-300">
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-9c-1.657 0-3-.895-3-2s1.343-2 3-2 3.001.895 3.001 2-1.343 2-3.001 2z" />
-            </svg>
-            Pricing Optimizer
-            <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 hidden group-hover:block px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap z-10">
-              Maximize Profits
-            </span>
-          </a>
-          <a href="/email-campaign" className="group relative px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-800 text-white rounded-lg font-semibold text-sm flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-yellow-300">
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-            Email Campaign
-            <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 hidden group-hover:block px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap z-10">
-              Engage Your Audience
-            </span>
-          </a>
+        <div className="bg-gray-800 rounded-xl shadow-lg p-6 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="w-full">
+              <h3 className="text-lg font-bold text-yellow-300 mb-4 flex items-center">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Launch Pad
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                <a href="/tools-dashboard" className="group relative px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 rounded-lg font-semibold text-sm flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-yellow-300">
+                  <BarChart2 className="w-4 h-4 mr-2" /> Sales Dashboard
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">Hot</span>
+                </a>
+                <a href="/sales-forecasting" className="group relative px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-800 text-white rounded-lg font-semibold text-sm flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-yellow-300">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 3.055A9.001 9.001 0 1012 21a9 9 0 00-9-9" />
+                  </svg>
+                  Sales Forecasting
+                </a>
+                <a href="/seo-analysis" className="group relative px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-800 text-white rounded-lg font-semibold text-sm flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-yellow-300">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 11c0-1.1-.9-2-2-2s-2 .9-2 2 2 4 2 4 2-2.9 2-4z" />
+                  </svg>
+                  SEO Analysis
+                </a>
+                <a href="/pricing-optimizer" className="group relative px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-800 text-white rounded-lg font-semibold text-sm flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-yellow-300">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-9c-1.657 0-3-.895-3-2s1.343-2 3-2 3.001.895 3.001 2-1.343 2-3.001 2z" />
+                  </svg>
+                  Pricing Optimizer
+                </a>
+                <a href="/email-campaign" className="group relative px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-800 text-white rounded-lg font-semibold text-sm flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-yellow-300">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Email Campaign
+                </a>
+              </div>
+            </div>
+            <button onClick={handleSignOut} className="px-4 py-2 bg-gradient-to-r from-orange-500 to-yellow-400 text-white rounded-lg shadow-lg hover:from-orange-600 hover:to-yellow-500 transition-all duration-300 flex items-center text-sm font-semibold transform hover:scale-105 flex-shrink-0">
+              <LogOut className="h-4 w-4 mr-2" /> Sign Out
+            </button>
+          </div>
         </div>
       </div>
-      <button onClick={handleSignOut} className="px-4 py-2 bg-gradient-to-r from-orange-500 to-yellow-400 text-white rounded-lg shadow-lg hover:from-orange-600 hover:to-yellow-500 transition-all duration-300 flex items-center text-sm font-semibold transform hover:scale-105 flex-shrink-0">
-        <LogOut className="h-4 w-4 mr-2" /> Sign Out
-      </button>
-    </div>
-  </div>
-</div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-lg p-8">
@@ -946,119 +857,119 @@ export default function ToolsDashboard() {
           </div>
 
           <div className="bg-gray-700 p-6 rounded-xl mb-6 relative z-10 shadow-lg border border-gray-600">
-  <h3 className="text-lg font-semibold text-yellow-300 mb-4 flex items-center">
-    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4z" />
-    </svg>
-    Filter Your Reports
-  </h3>
-  <div className="mb-6">
-    <label className="block text-sm font-medium text-gray-300 mb-2">Date Range</label>
-    <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
-      <input type="date" value={dateRange.start} onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })} className="w-full sm:w-1/2 px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm transition-all duration-200 hover:bg-gray-700" />
-      <input type="date" value={dateRange.end} onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })} className="w-full sm:w-1/2 px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm transition-all duration-200 hover:bg-gray-700" />
-    </div>
-  </div>
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-    {[
-      { label: 'Products', items: allProducts, selected: selectedProducts, setSelected: setSelectedProducts, ref: productRef, isOpen: isProductDropdownOpen, setIsOpen: setIsProductDropdownOpen },
-      { label: 'States', items: allStates, selected: selectedStates, setSelected: setSelectedStates, ref: stateRef, isOpen: isStateDropdownOpen, setIsOpen: setIsStateDropdownOpen },
-      { label: 'Countries', items: allCountries, selected: selectedCountries, setSelected: setSelectedCountries, ref: countryRef, isOpen: isCountryDropdownOpen, setIsOpen: setIsCountryDropdownOpen },
-      { label: 'Customers', items: allCustomers, selected: selectedCustomers, setSelected: setSelectedCustomers, ref: customerRef, isOpen: isCustomerDropdownOpen, setIsOpen: setIsCustomerDropdownOpen },
-    ].map(({ label, items, selected, setSelected, ref, isOpen, setIsOpen }) => {
-      const [searchTerm, setSearchTerm] = useState('');
-      const filteredItems = items.filter(item => item.toLowerCase().includes(searchTerm.toLowerCase()));
-
-      const toggleItem = (item: string) => {
-        const newSelected = selected.includes(item)
-          ? selected.filter(i => i !== item)
-          : [...selected, item];
-        setSelected(newSelected);
-      };
-
-      return (
-        <div key={label} className="relative group" ref={ref}>
-          <label className="block text-sm font-medium text-gray-300 mb-2">{label}</label>
-          <button 
-            onClick={() => setIsOpen(!isOpen)} 
-            className="w-full px-3 py-2 bg-gradient-to-r from-gray-800 to-gray-900 border border-yellow-300 rounded-full text-white flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
-          >
-            <span>{selected.length === 0 ? `All ${label}` : `${selected.length} Selected`}</span>
-            {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </button>
-          {isOpen && (
-            <div className="absolute z-20 mt-2 w-full bg-gray-800 border border-yellow-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              <div className="p-2 sticky top-0 bg-gray-900">
-                <input
-                  type="text"
-                  placeholder={`Search ${label}...`}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-3 py-1 bg-gray-700 border border-gray-600 rounded-full text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-300 placeholder-gray-400 transition-all duration-200 hover:bg-gray-600"
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </div>
-              <div className="p-2">
-                <button onClick={() => setSelected(items)} className="w-full text-left px-2 py-1 text-gray-300 hover:bg-gray-700 rounded text-sm transition-colors duration-200">Select All</button>
-                <button onClick={() => setSelected([])} className="w-full text-left px-2 py-1 text-gray-300 hover:bg-gray-700 rounded text-sm transition-colors duration-200">Clear All</button>
-                {filteredItems.length === 0 ? (
-                  <p className="text-gray-500 text-sm px-2 py-1">No matches found</p>
-                ) : (
-                  filteredItems.map(item => (
-                    <label key={item} className="flex items-center px-2 py-1 text-gray-300 hover:bg-gray-700 rounded text-sm transition-colors duration-200 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={selected.includes(item)}
-                        onChange={() => toggleItem(item)}
-                        className="mr-2 rounded text-yellow-300 focus:ring-yellow-300"
-                      />
-                      {item}
-                    </label>
-                  ))
-                )}
+            <h3 className="text-lg font-semibold text-yellow-300 mb-4 flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4z" />
+              </svg>
+              Filter Your Reports
+            </h3>
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-300 mb-2">Date Range</label>
+              <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+                <input type="date" value={dateRange.start} onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })} className="w-full sm:w-1/2 px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm transition-all duration-200 hover:bg-gray-700" />
+                <input type="date" value={dateRange.end} onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })} className="w-full sm:w-1/2 px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm transition-all duration-200 hover:bg-gray-700" />
               </div>
             </div>
-          )}
-        </div>
-      );
-    })}
-  </div>
-</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { label: 'Products', items: allProducts, selected: selectedProducts, setSelected: setSelectedProducts, ref: productRef, isOpen: isProductDropdownOpen, setIsOpen: setIsProductDropdownOpen },
+                { label: 'States', items: allStates, selected: selectedStates, setSelected: setSelectedStates, ref: stateRef, isOpen: isStateDropdownOpen, setIsOpen: setIsStateDropdownOpen },
+                { label: 'Countries', items: allCountries, selected: selectedCountries, setSelected: setSelectedCountries, ref: countryRef, isOpen: isCountryDropdownOpen, setIsOpen: setIsCountryDropdownOpen },
+                { label: 'Customers', items: allCustomers, selected: selectedCustomers, setSelected: setSelectedCustomers, ref: customerRef, isOpen: isCustomerDropdownOpen, setIsOpen: setIsCustomerDropdownOpen },
+              ].map(({ label, items, selected, setSelected, ref, isOpen, setIsOpen }) => {
+                const [searchTerm, setSearchTerm] = useState('');
+                const filteredItems = items.filter(item => item.toLowerCase().includes(searchTerm.toLowerCase()));
+
+                const toggleItem = (item: string) => {
+                  const newSelected = selected.includes(item)
+                    ? selected.filter(i => i !== item)
+                    : [...selected, item];
+                  setSelected(newSelected);
+                };
+
+                return (
+                  <div key={label} className="relative group" ref={ref}>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">{label}</label>
+                    <button 
+                      onClick={() => setIsOpen(!isOpen)} 
+                      className="w-full px-3 py-2 bg-gradient-to-r from-gray-800 to-gray-900 border border-yellow-300 rounded-full text-white flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+                    >
+                      <span>{selected.length === 0 ? `All ${label}` : `${selected.length} Selected`}</span>
+                      {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </button>
+                    {isOpen && (
+                      <div className="absolute z-20 mt-2 w-full bg-gray-800 border border-yellow-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        <div className="p-2 sticky top-0 bg-gray-900">
+                          <input
+                            type="text"
+                            placeholder={`Search ${label}...`}
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full px-3 py-1 bg-gray-700 border border-gray-600 rounded-full text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-300 placeholder-gray-400 transition-all duration-200 hover:bg-gray-600"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                        <div className="p-2">
+                          <button onClick={() => setSelected(items)} className="w-full text-left px-2 py-1 text-gray-300 hover:bg-gray-700 rounded text-sm transition-colors duration-200">Select All</button>
+                          <button onClick={() => setSelected([])} className="w-full text-left px-2 py-1 text-gray-300 hover:bg-gray-700 rounded text-sm transition-colors duration-200">Clear All</button>
+                          {filteredItems.length === 0 ? (
+                            <p className="text-gray-500 text-sm px-2 py-1">No matches found</p>
+                          ) : (
+                            filteredItems.map(item => (
+                              <label key={item} className="flex items-center px-2 py-1 text-gray-300 hover:bg-gray-700 rounded text-sm transition-colors duration-200 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={selected.includes(item)}
+                                  onChange={() => toggleItem(item)}
+                                  className="mr-2 rounded text-yellow-300 focus:ring-yellow-300"
+                                />
+                                {item}
+                              </label>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
 
           <div className="bg-gray-700 p-6 rounded-lg mb-6">
-  <h3 className="text-lg font-semibold text-gray-200 mb-4">Select Report Type</h3>
-  <select
-    value={selectedReport}
-    onChange={(e) => setSelectedReport(e.target.value)}
-    className="w-full md:w-96 px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm"
-  >
-    <option value="total-sales">Total Sales Report</option>
-    <option value="sales-by-product">Sales by Product</option>
-    <option value="sales-by-region">Sales by Region</option>
-    <option value="customer-lifetime-value">Customer Lifetime Value (CLV)</option>
-    <option value="average-order-value">Average Order Value (AOV)</option>
-    <option value="repeat-purchase-rate">Repeat Purchase Rate</option>
-    <option value="sales-growth">Sales Growth Over Time</option>
-    <option value="product-performance">Product Performance</option>
-    <option value="customer-acquisition">Customer Acquisition Trends</option>
-  </select>
-  {(selectedReport === 'sales-growth' || selectedReport === 'customer-acquisition') && (
-    <div className="mt-6">
-      <label className="block text-sm font-medium text-gray-400 mb-2">Trend View</label>
-      <div className="flex space-x-4">
-        {(['daily', 'weekly', 'monthly'] as const).map((trend) => (
-          <button
-            key={trend}
-            onClick={() => setTrendType(trend)}
-            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${trendType === trend ? 'bg-yellow-300 text-gray-900 shadow-lg' : 'bg-gray-800 text-gray-200 hover:bg-gray-600 hover:text-yellow-300'}`}
-          >
-            {trend.charAt(0).toUpperCase() + trend.slice(1)}
-          </button>
-        ))}
-      </div>
-    </div>
-  )}
-</div>
+            <h3 className="text-lg font-semibold text-gray-200 mb-4">Select Report Type</h3>
+            <select
+              value={selectedReport}
+              onChange={(e) => setSelectedReport(e.target.value)}
+              className="w-full md:w-96 px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm"
+            >
+              <option value="sales-growth">Sales Growth Over Time</option>
+              <option value="sales-by-product">Sales by Product</option>
+              <option value="sales-by-region">Sales by Region</option>
+              <option value="customer-lifetime-value">Customer Lifetime Value (CLV)</option>
+              <option value="average-order-value">Average Order Value (AOV)</option>
+              <option value="repeat-purchase-rate">Repeat Purchase Rate</option>
+              <option value="product-performance">Product Performance</option>
+              <option value="customer-acquisition">Customer Acquisition Trends</option>
+            </select>
+            {(selectedReport === 'sales-growth' || selectedReport === 'customer-acquisition') && (
+              <div className="mt-6">
+                <label className="block text-sm font-medium text-gray-400 mb-2">Trend View</label>
+                <div className="flex space-x-4">
+                  {(['daily', 'weekly', 'monthly'] as const).map((trend) => (
+                    <button
+                      key={trend}
+                      onClick={() => setTrendType(trend)}
+                      className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${trendType === trend ? 'bg-yellow-300 text-gray-900 shadow-lg' : 'bg-gray-800 text-gray-200 hover:bg-gray-600 hover:text-yellow-300'}`}
+                    >
+                      {trend.charAt(0).toUpperCase() + trend.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           {isUploadModalOpen && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
@@ -1101,300 +1012,154 @@ export default function ToolsDashboard() {
                   ))}
                 </div>
 
-                {selectedReport === 'total-sales' && (
-  <div>
-    <h3 className="text-2xl font-semibold text-gray-200 mb-4">Total Sales Report</h3>
-    <div className="h-96 relative">
-      <Line
-        data={{
-          labels: aggregatedData.slice(-30).map((d) => {
-            const date = new Date(d.date);
-            return trendType === 'daily'
-              ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-              : trendType === 'weekly'
-              ? `Week of ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
-              : `${date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })}`;
-          }),
-          datasets: [
-            {
-              label: 'Total Sales',
-              data: aggregatedData.slice(-30).map((d) => d.sales),
-              fill: true,
-              backgroundColor: (context) => {
-                const ctx = context.chart.ctx;
-                const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-                gradient.addColorStop(0, 'rgba(251, 191, 36, 0.6)');
-                gradient.addColorStop(1, 'rgba(251, 191, 36, 0.1)');
-                return gradient;
-              },
-              borderColor: 'rgba(251, 146, 60, 1)',
-              borderWidth: 3,
-              tension: 0.4,
-              pointRadius: 5,
-              pointHoverRadius: 8,
-              pointBackgroundColor: '#FBBF24',
-              pointBorderColor: '#F59E0B',
-              pointHoverBackgroundColor: '#F59E0B',
-              pointHoverBorderColor: '#FBBF24',
-            },
-          ],
-        }}
-        options={{
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'top',
-              labels: {
-                color: '#D1D5DB',
-                font: { size: 14, weight: 'bold' },
-                boxWidth: 20,
-                usePointStyle: true,
-                pointStyle: 'circle',
-              },
-            },
-            title: {
-              display: true,
-              text: `Total Sales Trend (${trendType.charAt(0).toUpperCase() + trendType.slice(1)})`,
-              color: '#FBBF24',
-              font: { size: 20, weight: 'bold', family: 'Arial, sans-serif' },
-            },
-            tooltip: {
-              backgroundColor: 'rgba(0, 0, 0, 0.8)',
-              titleColor: '#FBBF24',
-              bodyColor: '#D1D5DB',
-              borderColor: '#F59E0B',
-              borderWidth: 1,
-              cornerRadius: 8,
-              padding: 12,
-              callbacks: {
-                label: (context) => `Sales: $${context.parsed.y.toFixed(2)}`,
-                title: (tooltipItems) => tooltipItems[0].label,
-              },
-            },
-            datalabels: {
-              display: false, // Disable by default for cleaner look
-            },
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                color: '#D1D5DB',
-                font: { size: 12 },
-                callback: (value) => `$${value}`,
-              },
-              grid: { color: 'rgba(209, 213, 219, 0.1)', borderDash: [5, 5] },
-              title: { display: true, text: 'Sales ($)', color: '#FBBF24', font: { size: 14 } },
-            },
-            x: {
-              ticks: {
-                color: '#D1D5DB',
-                font: { size: 12 },
-                maxRotation: 45,
-                minRotation: 45,
-              },
-              grid: { display: false },
-              title: {
-                display: true,
-                text: trendType === 'daily' ? 'Date' : trendType === 'weekly' ? 'Week' : 'Month',
-                color: '#FBBF24',
-                font: { size: 14 },
-              },
-            },
-          },
-          interaction: {
-            mode: 'index',
-            intersect: false,
-          },
-          hover: {
-            mode: 'nearest',
-            intersect: true,
-          },
-        }}
-      />
-    </div>
-    <h4 className="text-lg font-semibold text-gray-200 mt-6 mb-2">{insightsTitle}</h4>
-    {actionableInsights.map((item, index) => {
-      const trendData = aggregatedData.slice(-30);
-      const salesChange = trendData.length > 1 ? ((trendData[trendData.length - 1].sales - trendData[0].sales) / trendData[0].sales) * 100 : 0;
-      const peakSales = Math.max(...trendData.map(d => d.sales));
-      const peakDay = trendData.find(d => d.sales === peakSales)?.date || 'N/A';
-      const avgSales = trendData.length > 0 ? trendData.reduce((sum, d) => sum + d.sales, 0) / trendData.length : 0;
+                {selectedReport === 'sales-growth' && (
+                  <div>
+                    <h3 className="text-2xl font-semibold text-gray-200 mb-4">Sales Growth Over Time</h3>
+                    <div className="h-96"><Line data={salesGrowthChartData} options={chartOptionsByReport['sales-growth']} /></div>
+                    <h4 className="text-lg font-semibold text-gray-200 mt-6 mb-2">{insightsTitle}</h4>
+                    {actionableInsights.map((item, index) => (
+                      <div key={index} className="bg-gray-900 p-4 rounded-lg mb-4">
+                        <p className="text-xl text-yellow-300">${item.sales.toFixed(2)}</p>
+                        <ul className="list-disc list-inside text-gray-300 text-sm mt-2">
+                          {item.insight.map((line, i) => (
+                            <li key={i} className="mb-1">{line}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
-      const enhancedInsights = [
-        `Sales hit $${item.sales.toFixed(2)}—a ${salesChange > 0 ? `${salesChange.toFixed(1)}% surge` : `${Math.abs(salesChange).toFixed(1)}% dip`} this ${trendType}.`,
-        `- **Peak Alert**: $${peakSales.toFixed(2)} on ${new Date(peakDay).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}—replicate that win!`,
-        `- **Ad Blitz**: ${salesChange > 0 ? 'Boost ad spend 20% to ride the wave.' : 'Shift 10% of ad budget to test new hooks.'}`,
-        `- **Promo Play**: ${avgSales > 100 ? 'Drop a flash sale to keep momentum.' : 'Bundle top items to lift AOV.'}`,
-        `- **Stock Check**: ${peakSales > avgSales * 1.5 ? 'Restock 2x your peak day now!' : 'Optimize inventory—cut slow movers.'}`,
-      ];
+                {selectedReport === 'sales-by-product' && (
+                  <div>
+                                        <h3 className="text-2xl font-semibold text-gray-200 mb-4">Sales by Product</h3>
+                    <div className="h-96"><Bar data={salesByProductChartData} options={chartOptionsByReport['sales-by-product']} /></div>
+                    <h4 className="text-lg font-semibold text-gray-200 mt-6 mb-2">{insightsTitle}</h4>
+                    {actionableInsights.map((item, index) => (
+                      <div key={index} className="bg-gray-900 p-4 rounded-lg mb-4">
+                        <p className="text-xl text-yellow-300">{item.product}: ${item.sales.toFixed(2)}</p>
+                        <ul className="list-disc list-inside text-gray-300 text-sm mt-2">
+                          {item.insight.map((line, i) => (
+                            <li key={i} className="mb-1">{line}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
-      return (
-        <div key={index} className="bg-gray-900 p-4 rounded-lg mb-4 shadow-md hover:shadow-lg transition-shadow duration-300">
-          <p className="text-xl text-yellow-300">${item.sales.toFixed(2)}</p>
-          <ul className="list-disc list-inside text-gray-300 text-sm mt-2">
-            {enhancedInsights.map((line, i) => (
-              <li key={i} className="mb-1">{line}</li>
-            ))}
-          </ul>
+                {selectedReport === 'sales-by-region' && (
+                  <div>
+                    <h3 className="text-2xl font-semibold text-gray-200 mb-4">Sales by Region</h3>
+                    <div className="h-96"><Bar data={salesByRegionChartData} options={chartOptionsByReport['sales-by-region']} /></div>
+                    <h4 className="text-lg font-semibold text-gray-200 mt-6 mb-2">{insightsTitle}</h4>
+                    {actionableInsights.map((item, index) => (
+                      <div key={index} className="bg-gray-900 p-4 rounded-lg mb-4">
+                        <p className="text-xl text-yellow-300">{item.region}: ${item.sales.toFixed(2)}</p>
+                        <ul className="list-disc list-inside text-gray-300 text-sm mt-2">
+                          {item.insight.map((line, i) => (
+                            <li key={i} className="mb-1">{line}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {selectedReport === 'customer-lifetime-value' && (
+                  <div>
+                    <h3 className="text-2xl font-semibold text-gray-200 mb-4">Customer Lifetime Value (CLV)</h3>
+                    <div className="h-96"><Bar data={clvChartData} options={chartOptionsByReport['customer-lifetime-value']} /></div>
+                    <h4 className="text-lg font-semibold text-gray-200 mt-6 mb-2">{insightsTitle}</h4>
+                    {actionableInsights.map((item, index) => (
+                      <div key={index} className="bg-gray-900 p-4 rounded-lg mb-4">
+                        <p className="text-xl text-yellow-300">{item.customer}: ${item.sales.toFixed(2)}</p>
+                        <ul className="list-disc list-inside text-gray-300 text-sm mt-2">
+                          {item.insight.map((line, i) => (
+                            <li key={i} className="mb-1">{line}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {selectedReport === 'average-order-value' && (
+                  <div>
+                    <h3 className="text-2xl font-semibold text-gray-200 mb-4">Average Order Value (AOV)</h3>
+                    <div className="h-96"><Bar data={aovChartData} options={chartOptionsByReport['average-order-value']} /></div>
+                    <h4 className="text-lg font-semibold text-gray-200 mt-6 mb-2">{insightsTitle}</h4>
+                    {actionableInsights.map((item, index) => (
+                      <div key={index} className="bg-gray-900 p-4 rounded-lg mb-4">
+                        <p className="text-xl text-yellow-300">${item.sales.toFixed(2)}</p>
+                        <ul className="list-disc list-inside text-gray-300 text-sm mt-2">
+                          {item.insight.map((line, i) => (
+                            <li key={i} className="mb-1">{line}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {selectedReport === 'repeat-purchase-rate' && (
+                  <div>
+                    <h3 className="text-2xl font-semibold text-gray-200 mb-4">Repeat Purchase Rate</h3>
+                    <div className="h-96"><Bar data={repeatPurchaseRateChartData} options={chartOptionsByReport['repeat-purchase-rate']} /></div>
+                    <h4 className="text-lg font-semibold text-gray-200 mt-6 mb-2">{insightsTitle}</h4>
+                    {actionableInsights.map((item, index) => (
+                      <div key={index} className="bg-gray-900 p-4 rounded-lg mb-4">
+                        <p className="text-xl text-yellow-300">{item.sales.toFixed(1)}%</p>
+                        <ul className="list-disc list-inside text-gray-300 text-sm mt-2">
+                          {item.insight.map((line, i) => (
+                            <li key={i} className="mb-1">{line}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {selectedReport === 'product-performance' && (
+                  <div>
+                    <h3 className="text-2xl font-semibold text-gray-200 mb-4">Product Performance</h3>
+                    <div className="h-96"><Bar data={productPerformanceChartData} options={chartOptionsByReport['product-performance']} /></div>
+                    <h4 className="text-lg font-semibold text-gray-200 mt-6 mb-2">{insightsTitle}</h4>
+                    {actionableInsights.map((item, index) => (
+                      <div key={index} className="bg-gray-900 p-4 rounded-lg mb-4">
+                        <p className="text-xl text-yellow-300">{item.product}: ${item.sales.toFixed(2)}</p>
+                        <ul className="list-disc list-inside text-gray-300 text-sm mt-2">
+                          {item.insight.map((line, i) => (
+                            <li key={i} className="mb-1">{line}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {selectedReport === 'customer-acquisition' && (
+                  <div>
+                    <h3 className="text-2xl font-semibold text-gray-200 mb-4">Customer Acquisition Trends</h3>
+                    <div className="h-96"><Line data={customerAcquisitionChartData} options={chartOptionsByReport['customer-acquisition']} /></div>
+                    <h4 className="text-lg font-semibold text-gray-200 mt-6 mb-2">{insightsTitle}</h4>
+                    {actionableInsights.map((item, index) => (
+                      <div key={index} className="bg-gray-900 p-4 rounded-lg mb-4">
+                        <p className="text-xl text-yellow-300">{item.sales} New Customers</p>
+                        <ul className="list-disc list-inside text-gray-300 text-sm mt-2">
+                          {item.insight.map((line, i) => (
+                            <li key={i} className="mb-1">{line}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      );
-    })}
-  </div>
-)}                    
-                                      {selectedReport === 'sales-by-product' && (
-                                        <div>
-                                          <h3 className="text-2xl font-semibold text-gray-200 mb-4">Sales by Product</h3>
-                                          <div className="h-96"><Bar data={salesByProductChartData} options={chartOptionsByReport['sales-by-product']} /></div>
-                                          <h4 className="text-lg font-semibold text-gray-200 mt-6 mb-2">{insightsTitle}</h4>
-                                          {actionableInsights.map((item, index) => (
-                                            <div key={index} className="bg-gray-900 p-4 rounded-lg mb-4">
-                                              <p className="text-xl text-yellow-300">{item.product} - ${item.sales.toFixed(2)}</p>
-                                              <ul className="list-disc list-inside text-gray-300 text-sm mt-2">
-                                                {item.insight.map((line, i) => (
-                                                  <li key={i} className="mb-1">{line}</li>
-                                                ))}
-                                              </ul>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      )}
-                      
-                                      {selectedReport === 'sales-by-region' && (
-                                        <div>
-                                          <h3 className="text-2xl font-semibold text-gray-200 mb-4">Sales by Region</h3>
-                                          <div className="h-96"><Bar data={salesByRegionChartData} options={chartOptionsByReport['sales-by-region']} /></div>
-                                          <h4 className="text-lg font-semibold text-gray-200 mt-6 mb-2">{insightsTitle}</h4>
-                                          {actionableInsights.map((item, index) => (
-                                            <div key={index} className="bg-gray-900 p-4 rounded-lg mb-4">
-                                              <p className="text-xl text-yellow-300">{item.region} - ${item.sales.toFixed(2)}</p>
-                                              <ul className="list-disc list-inside text-gray-300 text-sm mt-2">
-                                                {item.insight.map((line, i) => (
-                                                  <li key={i} className="mb-1">{line}</li>
-                                                ))}
-                                              </ul>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      )}
-                      
-                                      {selectedReport === 'customer-lifetime-value' && (
-                                        <div>
-                                          <h3 className="text-2xl font-semibold text-gray-200 mb-4">Customer Lifetime Value</h3>
-                                          <div className="h-96"><Bar data={clvChartData} options={chartOptionsByReport['customer-lifetime-value']} /></div>
-                                          <h4 className="text-lg font-semibold text-gray-200 mt-6 mb-2">{insightsTitle}</h4>
-                                          {actionableInsights.map((item, index) => (
-                                            <div key={index} className="bg-gray-900 p-4 rounded-lg mb-4">
-                                              <p className="text-xl text-yellow-300">{item.customer} - ${item.sales.toFixed(2)}</p>
-                                              <ul className="list-disc list-inside text-gray-300 text-sm mt-2">
-                                                {item.insight.map((line, i) => (
-                                                  <li key={i} className="mb-1">{line}</li>
-                                                ))}
-                                              </ul>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      )}
-                      
-                                      {selectedReport === 'average-order-value' && (
-                                        <div>
-                                          <h3 className="text-2xl font-semibold text-gray-200 mb-4">Average Order Value</h3>
-                                          <div className="h-96"><Bar data={aovChartData} options={chartOptionsByReport['average-order-value']} /></div>
-                                          <h4 className="text-lg font-semibold text-gray-200 mt-6 mb-2">{insightsTitle}</h4>
-                                          {actionableInsights.map((item, index) => (
-                                            <div key={index} className="bg-gray-900 p-4 rounded-lg mb-4">
-                                              <p className="text-xl text-yellow-300">${item.sales.toFixed(2)}</p>
-                                              <ul className="list-disc list-inside text-gray-300 text-sm mt-2">
-                                                {item.insight.map((line, i) => (
-                                                  <li key={i} className="mb-1">{line}</li>
-                                                ))}
-                                              </ul>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      )}
-                      
-                                      {selectedReport === 'repeat-purchase-rate' && (
-                                        <div>
-                                          <h3 className="text-2xl font-semibold text-gray-200 mb-4">Repeat Purchase Rate</h3>
-                                          <div className="h-96"><Bar data={repeatPurchaseRateChartData} options={chartOptionsByReport['repeat-purchase-rate']} /></div>
-                                          <h4 className="text-lg font-semibold text-gray-200 mt-6 mb-2">{insightsTitle}</h4>
-                                          {actionableInsights.map((item, index) => (
-                                            <div key={index} className="bg-gray-900 p-4 rounded-lg mb-4">
-                                              <p className="text-xl text-yellow-300">{item.sales.toFixed(1)}%</p>
-                                              <ul className="list-disc list-inside text-gray-300 text-sm mt-2">
-                                                {item.insight.map((line, i) => (
-                                                  <li key={i} className="mb-1">{line}</li>
-                                                ))}
-                                              </ul>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      )}
-                      
-                                      {selectedReport === 'sales-growth' && (
-                                        <div>
-                                          <h3 className="text-2xl font-semibold text-gray-200 mb-4">Sales Growth Over Time</h3>
-                                          <div className="h-96"><Line data={salesGrowthChartData} options={chartOptionsByReport['sales-growth']} /></div>
-                                          <h4 className="text-lg font-semibold text-gray-200 mt-6 mb-2">{insightsTitle}</h4>
-                                          {actionableInsights.map((item, index) => (
-                                            <div key={index} className="bg-gray-900 p-4 rounded-lg mb-4">
-                                              <p className="text-xl text-yellow-300">${item.sales.toFixed(2)}</p>
-                                              <ul className="list-disc list-inside text-gray-300 text-sm mt-2">
-                                                {item.insight.map((line, i) => (
-                                                  <li key={i} className="mb-1">{line}</li>
-                                                ))}
-                                              </ul>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      )}
-                      
-                                      {selectedReport === 'product-performance' && (
-                                        <div>
-                                          <h3 className="text-2xl font-semibold text-gray-200 mb-4">Product Performance</h3>
-                                          <div className="h-96"><Bar data={productPerformanceChartData} options={chartOptionsByReport['product-performance']} /></div>
-                                          <h4 className="text-lg font-semibold text-gray-200 mt-6 mb-2">{insightsTitle}</h4>
-                                          {actionableInsights.map((item, index) => (
-                                            <div key={index} className="bg-gray-900 p-4 rounded-lg mb-4">
-                                              <p className="text-xl text-yellow-300">{item.product} - ${item.sales.toFixed(2)}</p>
-                                              <ul className="list-disc list-inside text-gray-300 text-sm mt-2">
-                                                {item.insight.map((line, i) => (
-                                                  <li key={i} className="mb-1">{line}</li>
-                                                ))}
-                                              </ul>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      )}
-                      
-                                      {selectedReport === 'customer-acquisition' && (
-                                        <div>
-                                          <h3 className="text-2xl font-semibold text-gray-200 mb-4">Customer Acquisition Trends</h3>
-                                          <div className="h-96"><Line data={customerAcquisitionChartData} options={chartOptionsByReport['customer-acquisition']} /></div>
-                                          <h4 className="text-lg font-semibold text-gray-200 mt-6 mb-2">{insightsTitle}</h4>
-                                          {actionableInsights.map((item, index) => (
-                                            <div key={index} className="bg-gray-900 p-4 rounded-lg mb-4">
-                                              <p className="text-xl text-yellow-300">{item.sales} New Customers</p>
-                                              <ul className="list-disc list-inside text-gray-300 text-sm mt-2">
-                                                {item.insight.map((line, i) => (
-                                                  <li key={i} className="mb-1">{line}</li>
-                                                ))}
-                                              </ul>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                      
-                            <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-gray-500 text-sm">
-                              <p>&copy; 2025 DTC Tools. All rights reserved.</p>
-                            </footer>
-                          </div>
-                        );
-                      }
+      </div>
+    </div>
+  );
+}
