@@ -824,34 +824,51 @@ export default function ToolsDashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-  <div className="bg-gray-800 rounded-xl shadow-lg p-6 transform hover:-translate-y-1 transition-all duration-300">
+  <div className="bg-gray-800 rounded-xl shadow-lg p-6 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div className="w-full">
-        <h3 className="text-lg font-bold text-yellow-300 mb-4">Launch Pad</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-          <a href="/tools-dashboard" className="group relative px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 rounded-lg font-semibold text-sm transform hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg">
-            Sales Dashboard
+        <h3 className="text-lg font-bold text-yellow-300 mb-4 flex items-center">
+          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          Launch Pad
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+          <a href="/tools-dashboard" className="group relative px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 rounded-lg font-semibold text-sm flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-yellow-300">
+            <BarChart2 className="w-4 h-4 mr-2" /> Sales Dashboard
             <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">Hot</span>
           </a>
-          <a href="/sales-forecasting" className="group relative px-4 py-2 bg-gray-700 text-gray-200 rounded-lg font-semibold text-sm hover:bg-gradient-to-r hover:from-yellow-400 hover:to-orange-500 hover:text-gray-900 transition-all duration-300 shadow-md hover:shadow-lg">
+          <a href="/sales-forecasting" className="group relative px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-800 text-white rounded-lg font-semibold text-sm flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-yellow-300">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 3.055A9.001 9.001 0 1012 21a9 9 0 00-9-9" />
+            </svg>
             Sales Forecasting
             <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 hidden group-hover:block px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap z-10">
               Predict Your Future
             </span>
           </a>
-          <a href="/seo-analysis" className="group relative px-4 py-2 bg-gray-700 text-gray-200 rounded-lg font-semibold text-sm hover:bg-gradient-to-r hover:from-yellow-400 hover:to-orange-500 hover:text-gray-900 transition-all duration-300 shadow-md hover:shadow-lg">
+          <a href="/seo-analysis" className="group relative px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-800 text-white rounded-lg font-semibold text-sm flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-yellow-300">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 11c0-1.1-.9-2-2-2s-2 .9-2 2 2 4 2 4 2-2.9 2-4z" />
+            </svg>
             SEO Analysis
             <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 hidden group-hover:block px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap z-10">
               Boost Your Rankings
             </span>
           </a>
-          <a href="/pricing-optimizer" className="group relative px-4 py-2 bg-gray-700 text-gray-200 rounded-lg font-semibold text-sm hover:bg-gradient-to-r hover:from-yellow-400 hover:to-orange-500 hover:text-gray-900 transition-all duration-300 shadow-md hover:shadow-lg">
+          <a href="/pricing-optimizer" className="group relative px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-800 text-white rounded-lg font-semibold text-sm flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-yellow-300">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-9c-1.657 0-3-.895-3-2s1.343-2 3-2 3.001.895 3.001 2-1.343 2-3.001 2z" />
+            </svg>
             Pricing Optimizer
             <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 hidden group-hover:block px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap z-10">
               Maximize Profits
             </span>
           </a>
-          <a href="/email-campaign" className="group relative px-4 py-2 bg-gray-700 text-gray-200 rounded-lg font-semibold text-sm hover:bg-gradient-to-r hover:from-yellow-400 hover:to-orange-500 hover:text-gray-900 transition-all duration-300 shadow-md hover:shadow-lg">
+          <a href="/email-campaign" className="group relative px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-800 text-white rounded-lg font-semibold text-sm flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-yellow-300">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
             Email Campaign
             <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 hidden group-hover:block px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap z-10">
               Engage Your Audience
@@ -859,7 +876,7 @@ export default function ToolsDashboard() {
           </a>
         </div>
       </div>
-      <button onClick={handleSignOut} className="px-4 py-2 bg-gradient-to-r from-orange-500 to-yellow-400 text-white rounded-lg shadow-lg hover:from-orange-600 hover:to-yellow-500 transition-all duration-300 flex items-center text-sm font-semibold transform hover:scale-105">
+      <button onClick={handleSignOut} className="px-4 py-2 bg-gradient-to-r from-orange-500 to-yellow-400 text-white rounded-lg shadow-lg hover:from-orange-600 hover:to-yellow-500 transition-all duration-300 flex items-center text-sm font-semibold transform hover:scale-105 flex-shrink-0">
         <LogOut className="h-4 w-4 mr-2" /> Sign Out
       </button>
     </div>
@@ -880,13 +897,18 @@ export default function ToolsDashboard() {
             </div>
           </div>
 
-          <div className="bg-gray-700 p-6 rounded-lg mb-6 relative z-10">
-  <h3 className="text-lg font-semibold text-gray-200 mb-4">Filter Your Reports</h3>
+          <div className="bg-gray-700 p-6 rounded-xl mb-6 relative z-10 shadow-lg border border-gray-600">
+  <h3 className="text-lg font-semibold text-yellow-300 mb-4 flex items-center">
+    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4z" />
+    </svg>
+    Filter Your Reports
+  </h3>
   <div className="mb-6">
-    <label className="block text-sm font-medium text-gray-400 mb-2">Date Range</label>
+    <label className="block text-sm font-medium text-gray-300 mb-2">Date Range</label>
     <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
-      <input type="date" value={dateRange.start} onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })} className="w-full sm:w-1/2 px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm" />
-      <input type="date" value={dateRange.end} onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })} className="w-full sm:w-1/2 px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm" />
+      <input type="date" value={dateRange.start} onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })} className="w-full sm:w-1/2 px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm transition-all duration-200 hover:bg-gray-700" />
+      <input type="date" value={dateRange.end} onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })} className="w-full sm:w-1/2 px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm transition-all duration-200 hover:bg-gray-700" />
     </div>
   </div>
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -908,23 +930,23 @@ export default function ToolsDashboard() {
 
       return (
         <div key={label} className="relative group" ref={ref}>
-          <label className="block text-sm font-medium text-gray-400 mb-2">{label}</label>
+          <label className="block text-sm font-medium text-gray-300 mb-2">{label}</label>
           <button 
             onClick={() => setIsOpen(!isOpen)} 
-            className="w-full px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-full text-white flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm hover:bg-gray-700 transition-colors duration-200"
+            className="w-full px-3 py-2 bg-gradient-to-r from-gray-800 to-gray-900 border border-yellow-300 rounded-full text-white flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
           >
             <span>{selected.length === 0 ? `All ${label}` : `${selected.length} Selected`}</span>
             {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </button>
           {isOpen && (
-            <div className="absolute z-20 mt-2 w-full bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              <div className="p-2 sticky top-0 bg-gray-800">
+            <div className="absolute z-20 mt-2 w-full bg-gray-800 border border-yellow-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div className="p-2 sticky top-0 bg-gray-900">
                 <input
                   type="text"
                   placeholder={`Search ${label}...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-3 py-1 bg-gray-900 border border-gray-700 rounded-full text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-300 placeholder-gray-500"
+                  className="w-full px-3 py-1 bg-gray-700 border border-gray-600 rounded-full text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-300 placeholder-gray-400 transition-all duration-200 hover:bg-gray-600"
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
