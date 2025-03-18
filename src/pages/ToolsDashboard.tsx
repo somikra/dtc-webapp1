@@ -823,37 +823,37 @@ export default function ToolsDashboard() {
         </div>
       </div>
 
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   <div className="bg-gray-800 rounded-xl shadow-lg p-6 transform hover:-translate-y-1 transition-all duration-300">
-    <div className="flex flex-wrap justify-between items-center gap-4">
-      <div className="relative w-full md:w-auto">
-        <h3 className="text-lg font-bold text-yellow-300 mb-4 md:mb-0">Launch Pad</h3>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-2 md:mt-0 md:absolute md:-top-1 md:left-28 md:bg-gray-800 md:p-4 md:rounded-xl md:shadow-inner">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="w-full">
+        <h3 className="text-lg font-bold text-yellow-300 mb-4">Launch Pad</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
           <a href="/tools-dashboard" className="group relative px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 rounded-lg font-semibold text-sm transform hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg">
             Sales Dashboard
             <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">Hot</span>
           </a>
           <a href="/sales-forecasting" className="group relative px-4 py-2 bg-gray-700 text-gray-200 rounded-lg font-semibold text-sm hover:bg-gradient-to-r hover:from-yellow-400 hover:to-orange-500 hover:text-gray-900 transition-all duration-300 shadow-md hover:shadow-lg">
             Sales Forecasting
-            <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap">
+            <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 hidden group-hover:block px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap z-10">
               Predict Your Future
             </span>
           </a>
           <a href="/seo-analysis" className="group relative px-4 py-2 bg-gray-700 text-gray-200 rounded-lg font-semibold text-sm hover:bg-gradient-to-r hover:from-yellow-400 hover:to-orange-500 hover:text-gray-900 transition-all duration-300 shadow-md hover:shadow-lg">
             SEO Analysis
-            <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap">
+            <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 hidden group-hover:block px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap z-10">
               Boost Your Rankings
             </span>
           </a>
           <a href="/pricing-optimizer" className="group relative px-4 py-2 bg-gray-700 text-gray-200 rounded-lg font-semibold text-sm hover:bg-gradient-to-r hover:from-yellow-400 hover:to-orange-500 hover:text-gray-900 transition-all duration-300 shadow-md hover:shadow-lg">
             Pricing Optimizer
-            <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap">
+            <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 hidden group-hover:block px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap z-10">
               Maximize Profits
             </span>
           </a>
           <a href="/email-campaign" className="group relative px-4 py-2 bg-gray-700 text-gray-200 rounded-lg font-semibold text-sm hover:bg-gradient-to-r hover:from-yellow-400 hover:to-orange-500 hover:text-gray-900 transition-all duration-300 shadow-md hover:shadow-lg">
             Email Campaign
-            <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap">
+            <span className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 hidden group-hover:block px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap z-10">
               Engage Your Audience
             </span>
           </a>
