@@ -823,23 +823,48 @@ export default function ToolsDashboard() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-gray-800 rounded-lg shadow-lg p-4 flex flex-wrap justify-between items-center gap-4">
-          <nav className="flex flex-wrap gap-3">
-            <a href="/tools-dashboard" className="px-3 py-1.5 bg-yellow-300 text-gray-900 rounded-full font-semibold text-sm transition-all duration-300">Sales Dashboard</a>
-            <a href="/sales-forecasting" className="px-3 py-1.5 text-gray-300 hover:bg-gray-700 hover:text-yellow-300 rounded-full font-semibold text-sm transition-all duration-300">Sales Forecasting</a>
-            <a href="/seo-analysis" className="px-3 py-1.5 text-gray-300 hover:bg-gray-700 hover:text-yellow-300 rounded-full font-semibold text-sm transition-all duration-300">SEO Analysis</a>
-            <a href="/ad-copy-generator" className="px-3 py-1.5 text-gray-300 hover:bg-gray-700 hover:text-yellow-300 rounded-full font-semibold text-sm transition-all duration-300">AI Ad Copy Generator</a>
-            <a href="/customer-sentiment" className="px-3 py-1.5 text-gray-300 hover:bg-gray-700 hover:text-yellow-300 rounded-full font-semibold text-sm transition-all duration-300">AI Customer Sentiment</a>
-            <a href="/pricing-optimizer" className="px-3 py-1.5 text-gray-300 hover:bg-gray-700 hover:text-yellow-300 rounded-full font-semibold text-sm transition-all duration-300">AI Pricing Optimizer</a>
-            <a href="/trend-spotter" className="px-3 py-1.5 text-gray-300 hover:bg-gray-700 hover:text-yellow-300 rounded-full font-semibold text-sm transition-all duration-300">AI Trend Spotter</a>
-            <a href="/email-campaign" className="px-3 py-1.5 text-gray-300 hover:bg-gray-700 hover:text-yellow-300 rounded-full font-semibold text-sm transition-all duration-300">AI Email Campaign</a>
-          </nav>
-          <button onClick={handleSignOut} className="px-3 py-1.5 bg-gradient-to-r from-orange-500 to-yellow-400 text-white rounded-full shadow-lg hover:from-orange-600 hover:to-yellow-500 transition-all duration-300 flex items-center text-sm font-semibold whitespace-nowrap">
-            <LogOut className="h-4 w-4 mr-1" /> Sign Out
-          </button>
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div className="bg-gray-800 rounded-xl shadow-lg p-6 transform hover:-translate-y-1 transition-all duration-300">
+    <div className="flex flex-wrap justify-between items-center gap-4">
+      <div className="relative w-full md:w-auto">
+        <h3 className="text-lg font-bold text-yellow-300 mb-4 md:mb-0">Launch Pad</h3>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-2 md:mt-0 md:absolute md:-top-1 md:left-28 md:bg-gray-800 md:p-4 md:rounded-xl md:shadow-inner">
+          <a href="/tools-dashboard" className="group relative px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 rounded-lg font-semibold text-sm transform hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg">
+            Sales Dashboard
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">Hot</span>
+          </a>
+          <a href="/sales-forecasting" className="group relative px-4 py-2 bg-gray-700 text-gray-200 rounded-lg font-semibold text-sm hover:bg-gradient-to-r hover:from-yellow-400 hover:to-orange-500 hover:text-gray-900 transition-all duration-300 shadow-md hover:shadow-lg">
+            Sales Forecasting
+            <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap">
+              Predict Your Future
+            </span>
+          </a>
+          <a href="/seo-analysis" className="group relative px-4 py-2 bg-gray-700 text-gray-200 rounded-lg font-semibold text-sm hover:bg-gradient-to-r hover:from-yellow-400 hover:to-orange-500 hover:text-gray-900 transition-all duration-300 shadow-md hover:shadow-lg">
+            SEO Analysis
+            <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap">
+              Boost Your Rankings
+            </span>
+          </a>
+          <a href="/pricing-optimizer" className="group relative px-4 py-2 bg-gray-700 text-gray-200 rounded-lg font-semibold text-sm hover:bg-gradient-to-r hover:from-yellow-400 hover:to-orange-500 hover:text-gray-900 transition-all duration-300 shadow-md hover:shadow-lg">
+            Pricing Optimizer
+            <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap">
+              Maximize Profits
+            </span>
+          </a>
+          <a href="/email-campaign" className="group relative px-4 py-2 bg-gray-700 text-gray-200 rounded-lg font-semibold text-sm hover:bg-gradient-to-r hover:from-yellow-400 hover:to-orange-500 hover:text-gray-900 transition-all duration-300 shadow-md hover:shadow-lg">
+            Email Campaign
+            <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap">
+              Engage Your Audience
+            </span>
+          </a>
         </div>
       </div>
+      <button onClick={handleSignOut} className="px-4 py-2 bg-gradient-to-r from-orange-500 to-yellow-400 text-white rounded-lg shadow-lg hover:from-orange-600 hover:to-yellow-500 transition-all duration-300 flex items-center text-sm font-semibold transform hover:scale-105">
+        <LogOut className="h-4 w-4 mr-2" /> Sign Out
+      </button>
+    </div>
+  </div>
+</div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-lg p-8">
@@ -856,101 +881,79 @@ export default function ToolsDashboard() {
           </div>
 
           <div className="bg-gray-700 p-6 rounded-lg mb-6 relative z-10">
-            <h3 className="text-lg font-semibold text-gray-200 mb-4">Filter Your Reports</h3>
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-400 mb-2">Date Range</label>
-              <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
-                <input type="date" value={dateRange.start} onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })} className="w-full sm:w-1/2 px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm" />
-                <input type="date" value={dateRange.end} onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })} className="w-full sm:w-1/2 px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm" />
+  <h3 className="text-lg font-semibold text-gray-200 mb-4">Filter Your Reports</h3>
+  <div className="mb-6">
+    <label className="block text-sm font-medium text-gray-400 mb-2">Date Range</label>
+    <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+      <input type="date" value={dateRange.start} onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })} className="w-full sm:w-1/2 px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm" />
+      <input type="date" value={dateRange.end} onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })} className="w-full sm:w-1/2 px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm" />
+    </div>
+  </div>
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    {[
+      { label: 'Products', items: allProducts, selected: selectedProducts, setSelected: setSelectedProducts, ref: productRef, isOpen: isProductDropdownOpen, setIsOpen: setIsProductDropdownOpen },
+      { label: 'States', items: allStates, selected: selectedStates, setSelected: setSelectedStates, ref: stateRef, isOpen: isStateDropdownOpen, setIsOpen: setIsStateDropdownOpen },
+      { label: 'Countries', items: allCountries, selected: selectedCountries, setSelected: setSelectedCountries, ref: countryRef, isOpen: isCountryDropdownOpen, setIsOpen: setIsCountryDropdownOpen },
+      { label: 'Customers', items: allCustomers, selected: selectedCustomers, setSelected: setSelectedCustomers, ref: customerRef, isOpen: isCustomerDropdownOpen, setIsOpen: setIsCustomerDropdownOpen },
+    ].map(({ label, items, selected, setSelected, ref, isOpen, setIsOpen }) => {
+      const [searchTerm, setSearchTerm] = useState('');
+      const filteredItems = items.filter(item => item.toLowerCase().includes(searchTerm.toLowerCase()));
+
+      const toggleItem = (item: string) => {
+        const newSelected = selected.includes(item)
+          ? selected.filter(i => i !== item)
+          : [...selected, item];
+        setSelected(newSelected);
+      };
+
+      return (
+        <div key={label} className="relative group" ref={ref}>
+          <label className="block text-sm font-medium text-gray-400 mb-2">{label}</label>
+          <button 
+            onClick={() => setIsOpen(!isOpen)} 
+            className="w-full px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-full text-white flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm hover:bg-gray-700 transition-colors duration-200"
+          >
+            <span>{selected.length === 0 ? `All ${label}` : `${selected.length} Selected`}</span>
+            {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+          {isOpen && (
+            <div className="absolute z-20 mt-2 w-full bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div className="p-2 sticky top-0 bg-gray-800">
+                <input
+                  type="text"
+                  placeholder={`Search ${label}...`}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full px-3 py-1 bg-gray-900 border border-gray-700 rounded-full text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-300 placeholder-gray-500"
+                  onClick={(e) => e.stopPropagation()}
+                />
               </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="relative group" ref={productRef}>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Products</label>
-                <button onClick={() => setIsProductDropdownOpen(!isProductDropdownOpen)} className="w-full px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-full text-white flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm">
-                  <span>{selectedProducts.length === 0 ? 'All Products' : `${selectedProducts.length} Selected`}</span>
-                  {isProductDropdownOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </button>
-                {isProductDropdownOpen && (
-                  <div className="absolute z-20 mt-2 w-full bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    <div className="p-2">
-                      <button onClick={selectAllProducts} className="w-full text-left px-2 py-1 text-gray-300 hover:bg-gray-700 rounded text-sm">Select All</button>
-                      <button onClick={unselectAllProducts} className="w-full text-left px-2 py-1 text-gray-300 hover:bg-gray-700 rounded text-sm">Unselect All</button>
-                      {allProducts.map(product => (
-                        <label key={product} className="flex items-center px-2 py-1 text-gray-300 hover:bg-gray-700 rounded text-sm">
-                          <input type="checkbox" checked={selectedProducts.includes(product)} onChange={() => handleProductChange(product)} className="mr-2 rounded text-yellow-300 focus:ring-yellow-300" />
-                          {product}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="relative group" ref={stateRef}>
-                <label className="block text-sm font-medium text-gray-400 mb-2">States</label>
-                <button onClick={() => setIsStateDropdownOpen(!isStateDropdownOpen)} className="w-full px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-full text-white flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm">
-                  <span>{selectedStates.length === 0 ? 'All States' : `${selectedStates.length} Selected`}</span>
-                  {isStateDropdownOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </button>
-                {isStateDropdownOpen && (
-                  <div className="absolute z-20 mt-2 w-full bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    <div className="p-2">
-                      <button onClick={selectAllStates} className="w-full text-left px-2 py-1 text-gray-300 hover:bg-gray-700 rounded text-sm">Select All</button>
-                      <button onClick={unselectAllStates} className="w-full text-left px-2 py-1 text-gray-300 hover:bg-gray-700 rounded text-sm">Unselect All</button>
-                      {allStates.map(state => (
-                        <label key={state} className="flex items-center px-2 py-1 text-gray-300 hover:bg-gray-700 rounded text-sm">
-                          <input type="checkbox" checked={selectedStates.includes(state)} onChange={() => handleStateChange(state)} className="mr-2 rounded text-yellow-300 focus:ring-yellow-300" />
-                          {state}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="relative group" ref={countryRef}>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Countries</label>
-                <button onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)} className="w-full px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-full text-white flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm">
-                  <span>{selectedCountries.length === 0 ? 'All Countries' : `${selectedCountries.length} Selected`}</span>
-                  {isCountryDropdownOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </button>
-                {isCountryDropdownOpen && (
-                  <div className="absolute z-20 mt-2 w-full bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    <div className="p-2">
-                      <button onClick={selectAllCountries} className="w-full text-left px-2 py-1 text-gray-300 hover:bg-gray-700 rounded text-sm">Select All</button>
-                      <button onClick={unselectAllCountries} className="w-full text-left px-2 py-1 text-gray-300 hover:bg-gray-700 rounded text-sm">Unselect All</button>
-                      {allCountries.map(country => (
-                        <label key={country} className="flex items-center px-2 py-1 text-gray-300 hover:bg-gray-700 rounded text-sm">
-                          <input type="checkbox" checked={selectedCountries.includes(country)} onChange={() => handleCountryChange(country)} className="mr-2 rounded text-yellow-300 focus:ring-yellow-300" />
-                          {country}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="relative group" ref={customerRef}>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Customers</label>
-                <button onClick={() => setIsCustomerDropdownOpen(!isCustomerDropdownOpen)} className="w-full px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-full text-white flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm">
-                  <span>{selectedCustomers.length === 0 ? 'All Customers' : `${selectedCustomers.length} Selected`}</span>
-                  {isCustomerDropdownOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </button>
-                {isCustomerDropdownOpen && (
-                  <div className="absolute z-20 mt-2 w-full bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    <div className="p-2">
-                      <button onClick={selectAllCustomers} className="w-full text-left px-2 py-1 text-gray-300 hover:bg-gray-700 rounded text-sm">Select All</button>
-                      <button onClick={unselectAllCustomers} className="w-full text-left px-2 py-1 text-gray-300 hover:bg-gray-700 rounded text-sm">Unselect All</button>
-                      {allCustomers.map(customer => (
-                        <label key={customer} className="flex items-center px-2 py-1 text-gray-300 hover:bg-gray-700 rounded text-sm">
-                          <input type="checkbox" checked={selectedCustomers.includes(customer)} onChange={() => handleCustomerChange(customer)} className="mr-2 rounded text-yellow-300 focus:ring-yellow-300" />
-                          {customer}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
+              <div className="p-2">
+                <button onClick={() => setSelected(items)} className="w-full text-left px-2 py-1 text-gray-300 hover:bg-gray-700 rounded text-sm transition-colors duration-200">Select All</button>
+                <button onClick={() => setSelected([])} className="w-full text-left px-2 py-1 text-gray-300 hover:bg-gray-700 rounded text-sm transition-colors duration-200">Clear All</button>
+                {filteredItems.length === 0 ? (
+                  <p className="text-gray-500 text-sm px-2 py-1">No matches found</p>
+                ) : (
+                  filteredItems.map(item => (
+                    <label key={item} className="flex items-center px-2 py-1 text-gray-300 hover:bg-gray-700 rounded text-sm transition-colors duration-200 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selected.includes(item)}
+                        onChange={() => toggleItem(item)}
+                        className="mr-2 rounded text-yellow-300 focus:ring-yellow-300"
+                      />
+                      {item}
+                    </label>
+                  ))
                 )}
               </div>
             </div>
-          </div>
+          )}
+        </div>
+      );
+    })}
+  </div>
+</div>
 
           <div className="bg-gray-700 p-6 rounded-lg mb-6">
   <h3 className="text-lg font-semibold text-gray-200 mb-4">Select Report Type</h3>
