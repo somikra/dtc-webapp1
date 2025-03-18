@@ -71,7 +71,7 @@ export default function ToolsDashboard() {
   const [salesData, setSalesData] = useState<Sale[]>([]);
   const [uploading, setUploading] = useState<boolean>(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
-  const [selectedReport, setSelectedReport] = useState<string>('sales-growth'); // Default to "sales-growth"
+  const [selectedReport, setSelectedReport] = useState<string>('sales-growth');
   const [dateRange, setDateRange] = useState<DateRange>({ start: '2025-01-01', end: '2025-12-31' });
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [selectedStates, setSelectedStates] = useState<string[]>([]);
@@ -83,6 +83,7 @@ export default function ToolsDashboard() {
   const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState<boolean>(false);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [trendType, setTrendType] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+  const [uploadMessage, setUploadMessage] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const productRef = useRef<HTMLDivElement>(null);
@@ -103,7 +104,8 @@ export default function ToolsDashboard() {
 
   const handleFileUpload = async () => {
     if (!fileToUpload) {
-      alert('Please select a file to load');
+      setUploadMessage('Please select a file to load');
+      setTimeout(() => setUploadMessage(null), 3000);
       return;
     }
 
@@ -127,14 +129,16 @@ export default function ToolsDashboard() {
           }));
 
         setSalesData((prevData) => [...prevData, ...parsedData]);
-        alert('Sales data loaded successfully!');
+        setUploadMessage('Sales data loaded successfully!');
+        setTimeout(() => setUploadMessage(null), 3000);
         setIsUploadModalOpen(false);
         setFileToUpload(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
         setUploading(false);
       },
       error: () => {
-        alert('Error parsing CSV file. Please check the file format.');
+        setUploadMessage('Error parsing CSV file. Please check the format.');
+        setTimeout(() => setUploadMessage(null), 3000);
         setUploading(false);
       },
     });
@@ -178,12 +182,14 @@ export default function ToolsDashboard() {
       groupedData[key].push(sale);
     });
 
-    return Object.entries(groupedData).map(([key, sales]) => ({
-      date: key,
-      sales: sales.reduce((sum, s) => sum + s.sales, 0),
-      quantity: sales.reduce((sum, s) => sum + s.quantity, 0),
-      customers: [...new Set(sales.map(s => s.customer))].length,
-    }));
+    return Object.entries(groupedData)
+      .sort(([keyA], [keyB]) => new Date(keyA).getTime() - new Date(keyB).getTime())
+      .map(([key, sales]) => ({
+        date: key,
+        sales: sales.reduce((sum, s) => sum + s.sales, 0),
+        quantity: sales.reduce((sum, s) => sum + s.quantity, 0),
+        customers: [...new Set(sales.map(s => s.customer))].length,
+      }));
   };
 
   const filteredData: Sale[] = salesData.filter((sale) => {
@@ -209,7 +215,7 @@ export default function ToolsDashboard() {
       product,
       sales: filteredData.filter(sale => sale.product === product).reduce((sum, sale) => sum + sale.sales, 0),
     }))
-    .sort((a, b) => b.sales - a.sales)
+    .sort((a, b) => a.product.localeCompare(b.product))
     .slice(0, 3);
 
   const topCustomersBySales = [...new Set(filteredData.map(sale => sale.customer))]
@@ -217,7 +223,7 @@ export default function ToolsDashboard() {
       customer,
       sales: filteredData.filter(sale => sale.customer === customer).reduce((sum, sale) => sum + sale.sales, 0),
     }))
-    .sort((a, b) => b.sales - a.sales)
+    .sort((a, b) => a.customer.localeCompare(b.customer))
     .slice(0, 3);
 
   const topRegionsBySales = [...new Set(filteredData.map(sale => `${sale.state}, ${sale.country}`))]
@@ -225,7 +231,7 @@ export default function ToolsDashboard() {
       region,
       sales: filteredData.filter(sale => `${sale.state}, ${sale.country}` === region).reduce((sum, sale) => sum + sale.sales, 0),
     }))
-    .sort((a, b) => b.sales - a.sales)
+    .sort((a, b) => a.region.localeCompare(b.region))
     .slice(0, 3);
 
   const getInsights = () => {
@@ -255,21 +261,21 @@ export default function ToolsDashboard() {
               insight: [
                 `Sales at $${totalSales.toFixed(2)} with ${growthRate.toFixed(1)}% ${isGrowth ? `${trendLabel}ly climb—epic!` : `${trendLabel}ly dip—pivot time!`}`,
                 `Your total sales hit $${totalSales.toFixed(2)}—${isGrowth ? `a ${trendLabel}ly climb worth riding!` : `a ${trendLabel}ly dip to tackle!`}`,
-                `**Peak Push**: ${isGrowth ? `Rerun this ${trendLabel}’s best promo.` : `Test a fresh promo this ${trendLabel}.`}`,
-                `**Seasonal Prep**: ${isGrowth ? `Stock up early if this ${trendLabel}’s seasonal.` : `Counter seasonal drags this ${trendLabel}.`}`,
-                `**Channel Test**: ${isGrowth ? `Test a new platform this ${trendLabel}.` : `Stabilize core channels first.`}`,
-                `**Top Performers**: Check "Sales by Product" to ${isGrowth ? 'amplify what’s hot' : 'revive what’s off'}.`,
-                `**New Markets**: ${isGrowth ? `Use this ${trendLabel}’s cash to test a new channel.` : 'Focus on core sales to stabilize.'}`,
-                `**Cost Check**: Cut 5%—that’s $${(totalSales * 0.05).toFixed(2)} to ${isGrowth ? 'reinvest' : 'cushion'}.`,
+                `- **Peak Push**: ${isGrowth ? `Rerun this ${trendLabel}’s best promo.` : `Test a fresh promo this ${trendLabel}.`}`,
+                `- **Seasonal Prep**: ${isGrowth ? `Stock up early if this ${trendLabel}’s seasonal.` : `Counter seasonal drags this ${trendLabel}.`}`,
+                `- **Channel Test**: ${isGrowth ? `Test a new platform this ${trendLabel}.` : `Stabilize core channels first.`}`,
+                `- **Top Performers**: Check "Sales by Product" to ${isGrowth ? 'amplify what’s hot' : 'revive what’s off'}.`,
+                `- **New Markets**: ${isGrowth ? `Use this ${trendLabel}’s cash to test a new channel.` : 'Focus on core sales to stabilize.'}`,
+                `- **Cost Check**: Cut 5%—that’s $${(totalSales * 0.05).toFixed(2)} to ${isGrowth ? 'reinvest' : 'cushion'}.`,
               ],
             },
             {
               sales: totalOrders,
               insight: [
                 `${totalOrders} orders this ${trendLabel}—${totalOrders > 5 ? 'steady vibes!' : 'time to spark some action!'}`,
-                `**Repeat Boost**: Launch a "Buy Again" deal to ${isGrowth ? 'keep it rolling' : 'get back on track'}.`,
-                `**Checkout Flow**: Simplify it—lost orders cost $${avgOrderValue} each.`,
-                `**Upsell Now**: Add a $5 add-on to ${isGrowth ? 'boost the wave' : 'lift the numbers'}.`,
+                `- **Repeat Boost**: Launch a "Buy Again" deal to ${isGrowth ? 'keep it rolling' : 'get back on track'}.`,
+                `- **Checkout Flow**: Simplify it—lost orders cost $${avgOrderValue} each.`,
+                `- **Upsell Now**: Add a $5 add-on to ${isGrowth ? 'boost the wave' : 'lift the numbers'}.`,
               ],
             },
           ],
@@ -777,6 +783,21 @@ export default function ToolsDashboard() {
 
   return (
     <div className="bg-gray-900 min-h-screen text-white">
+      {uploadMessage && (
+        <div className="fixed top-4 right-4 z-50 animate-fade-in">
+          <div className={`p-4 rounded-lg shadow-lg transform transition-all duration-500 ${uploadMessage.includes('Error') ? 'bg-red-600' : 'bg-green-600'} text-white flex items-center`}>
+            <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              {uploadMessage.includes('Error') ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              )}
+            </svg>
+            <span className="text-sm font-semibold">{uploadMessage}</span>
+          </div>
+        </div>
+      )}
+
       <div className="bg-gradient-to-r from-orange-500 to-purple-600 py-20 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/diagmonds.png')]"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -1014,7 +1035,7 @@ export default function ToolsDashboard() {
 
                 {selectedReport === 'sales-growth' && (
                   <div>
-                    <h3 className="text-2xl font-semibold text-gray-200 mb-4">Sales Growth Over Time</h3>
+                                        <h3 className="text-2xl font-semibold text-gray-200 mb-4">Sales Growth Over Time</h3>
                     <div className="h-96"><Line data={salesGrowthChartData} options={chartOptionsByReport['sales-growth']} /></div>
                     <h4 className="text-lg font-semibold text-gray-200 mt-6 mb-2">{insightsTitle}</h4>
                     {actionableInsights.map((item, index) => (
@@ -1032,7 +1053,7 @@ export default function ToolsDashboard() {
 
                 {selectedReport === 'sales-by-product' && (
                   <div>
-                                        <h3 className="text-2xl font-semibold text-gray-200 mb-4">Sales by Product</h3>
+                    <h3 className="text-2xl font-semibold text-gray-200 mb-4">Sales by Product</h3>
                     <div className="h-96"><Bar data={salesByProductChartData} options={chartOptionsByReport['sales-by-product']} /></div>
                     <h4 className="text-lg font-semibold text-gray-200 mt-6 mb-2">{insightsTitle}</h4>
                     {actionableInsights.map((item, index) => (
