@@ -849,20 +849,6 @@ export default function ToolsDashboard() {
                 <input type="date" value={dateRange.end} onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })} className="w-full sm:w-1/2 px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm" />
               </div>
             </div>
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-400 mb-2">Trend View</label>
-              <div className="flex space-x-4">
-                {(['daily', 'weekly', 'monthly'] as const).map((trend) => (
-                  <button
-                    key={trend}
-                    onClick={() => setTrendType(trend)}
-                    className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${trendType === trend ? 'bg-yellow-300 text-gray-900 shadow-lg' : 'bg-gray-800 text-gray-200 hover:bg-gray-600 hover:text-yellow-300'}`}
-                  >
-                    {trend.charAt(0).toUpperCase() + trend.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="relative group" ref={productRef}>
                 <label className="block text-sm font-medium text-gray-400 mb-2">Products</label>
@@ -952,20 +938,39 @@ export default function ToolsDashboard() {
           </div>
 
           <div className="bg-gray-700 p-6 rounded-lg mb-6">
-            <h3 className="text-lg font-semibold text-gray-200 mb-4">Select Report Type</h3>
-            <select value={selectedReport} onChange={(e) => setSelectedReport(e.target.value)} className="w-full md:w-96 px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm">
-              <option value="total-sales">Total Sales Report</option>
-              <option value="sales-by-product">Sales by Product</option>
-              <option value="sales-by-region">Sales by Region</option>
-              <option value="customer-lifetime-value">Customer Lifetime Value (CLV)</option>
-              <option value="average-order-value">Average Order Value (AOV)</option>
-              <option value="repeat-purchase-rate">Repeat Purchase Rate</option>
-              <option value="sales-growth">Sales Growth Over Time</option>
-              <option value="product-performance">Product Performance</option>
-              <option value="customer-acquisition">Customer Acquisition Trends</option>
-            </select>
-          </div>
-
+  <h3 className="text-lg font-semibold text-gray-200 mb-4">Select Report Type</h3>
+  <select
+    value={selectedReport}
+    onChange={(e) => setSelectedReport(e.target.value)}
+    className="w-full md:w-96 px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm"
+  >
+    <option value="total-sales">Total Sales Report</option>
+    <option value="sales-by-product">Sales by Product</option>
+    <option value="sales-by-region">Sales by Region</option>
+    <option value="customer-lifetime-value">Customer Lifetime Value (CLV)</option>
+    <option value="average-order-value">Average Order Value (AOV)</option>
+    <option value="repeat-purchase-rate">Repeat Purchase Rate</option>
+    <option value="sales-growth">Sales Growth Over Time</option>
+    <option value="product-performance">Product Performance</option>
+    <option value="customer-acquisition">Customer Acquisition Trends</option>
+  </select>
+  {(selectedReport === 'sales-growth' || selectedReport === 'customer-acquisition') && (
+    <div className="mt-6">
+      <label className="block text-sm font-medium text-gray-400 mb-2">Trend View</label>
+      <div className="flex space-x-4">
+        {(['daily', 'weekly', 'monthly'] as const).map((trend) => (
+          <button
+            key={trend}
+            onClick={() => setTrendType(trend)}
+            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${trendType === trend ? 'bg-yellow-300 text-gray-900 shadow-lg' : 'bg-gray-800 text-gray-200 hover:bg-gray-600 hover:text-yellow-300'}`}
+          >
+            {trend.charAt(0).toUpperCase() + trend.slice(1)}
+          </button>
+        ))}
+      </div>
+    </div>
+  )}
+</div>
           {isUploadModalOpen && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
