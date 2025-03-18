@@ -662,16 +662,31 @@ export default function ToolsDashboard() {
           { title: 'Repeat Customers', value: repeatCustomerCount.toString(), description: `Number of customers with multiple purchases.` },
           { title: 'Total Customers', value: totalUniqueCustomers.toString(), description: `Total unique customers in the filtered data.` },
         ];
-      case 'sales-growth':
-        const dates = [...new Set(filteredData.map(sale => sale.date))].sort();
-        const firstSales = dates.length > 0 ? filteredData.filter(sale => sale.date === dates[0]).reduce((sum, sale) => sum + sale.sales, 0) : 0;
-        const lastSales = dates.length > 0 ? filteredData.filter(sale => sale.date === dates[dates.length - 1]).reduce((sum, sale) => sum + sale.sales, 0) : 0;
-        const growthRate = firstSales > 0 ? (((lastSales - firstSales) / firstSales) * 100).toFixed(1) : 'N/A';
-        return [
-          { title: 'Sales Growth Rate', value: `${growthRate}%`, description: `Sales growth from the first to the last date.` },
-          { title: 'Total Sales', value: `$${totalSales.toFixed(2)}`, description: `Total sales for the period.` },
-          { title: 'Highest Daily Sales', value: `$${Math.max(...dates.map(date => filteredData.filter(sale => sale.date === date).reduce((sum, sale) => sum + sale.sales, 0)), 0).toFixed(2)}`, description: `Highest sales in a single day.` },
-        ];
+        case 'sales-growth':
+          // Use aggregatedData which is already grouped by trendType
+          const firstSales = aggregatedData.length > 0 ? aggregatedData[0].sales : 0;
+          const lastSales = aggregatedData.length > 0 ? aggregatedData[aggregatedData.length - 1].sales : 0;
+          const growthRate = firstSales > 0 ? (((lastSales - firstSales) / firstSales) * 100).toFixed(1) : 'N/A';
+          const highestSales = aggregatedData.length > 0 ? Math.max(...aggregatedData.map(d => d.sales)).toFixed(2) : '0.00';
+          const trendLabel = trendType === 'daily' ? 'Day' : trendType === 'weekly' ? 'Week' : 'Month';
+        
+          return [
+            {
+              title: 'Sales Growth Rate',
+              value: `${growthRate}%`,
+              description: `Sales growth from the first to the last ${trendLabel.toLowerCase()}.`,
+            },
+            {
+              title: 'Total Sales',
+              value: `$${totalSales.toFixed(2)}`,
+              description: `Total sales for the period.`,
+            },
+            {
+              title: `Highest Sales`,
+              value: `$${highestSales}`,
+              description: `Highest sales in a single ${trendLabel.toLowerCase()}.`,
+            },
+          ];
       case 'product-performance':
         return [
           { title: 'Top Product by Units', value: topProductsBySales[0]?.product || 'N/A', description: `Top product by units sold: ${filteredData.filter(sale => sale.product === topProductsBySales[0]?.product).reduce((sum, sale) => sum + sale.quantity, 0)} units.` },
