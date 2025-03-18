@@ -1,3 +1,3 @@
 # dtc-webapp1
-
+I want build a webapp that is focused towards DTC entrpreneurs who want to start their business online and help new DTC sellers. The site is going to offer digital marketing services, a few tools like sales dashboard that gives sales insights based on uploaded sales data, sales forecasting, sharing feedback on their websites regarding SEO performance, and many more to add in future. The webapp will laso include blogs that will contain articles addressing common questions asked by sellers.
 [Edit in StackBlitz next generation editor ⚡️](https://stackblitz.com/~/github.com/somikra/dtc-webapp1)
