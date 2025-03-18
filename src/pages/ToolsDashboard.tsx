@@ -1102,23 +1102,147 @@ export default function ToolsDashboard() {
                 </div>
 
                 {selectedReport === 'total-sales' && (
-                  <div>
-                    <h3 className="text-2xl font-semibold text-gray-200 mb-4">Total Sales Report</h3>
-                    <div className="h-96"><Bar data={totalSalesChartData} options={chartOptionsByReport['total-sales']} /></div>
-                    <h4 className="text-lg font-semibold text-gray-200 mt-6 mb-2">{insightsTitle}</h4>
-                    {actionableInsights.map((item, index) => (
-                      <div key={index} className="bg-gray-900 p-4 rounded-lg mb-4">
-                        <p className="text-xl text-yellow-300">${item.sales.toFixed(2)}</p>
-                        <ul className="list-disc list-inside text-gray-300 text-sm mt-2">
-                                                {item.insight.map((line, i) => (
-                                                  <li key={i} className="mb-1">{line}</li>
-                                                ))}
-                                              </ul>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      )}
-                      
+  <div>
+    <h3 className="text-2xl font-semibold text-gray-200 mb-4">Total Sales Report</h3>
+    <div className="h-96 relative">
+      <Line
+        data={{
+          labels: aggregatedData.slice(-30).map((d) => {
+            const date = new Date(d.date);
+            return trendType === 'daily'
+              ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+              : trendType === 'weekly'
+              ? `Week of ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+              : `${date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })}`;
+          }),
+          datasets: [
+            {
+              label: 'Total Sales',
+              data: aggregatedData.slice(-30).map((d) => d.sales),
+              fill: true,
+              backgroundColor: (context) => {
+                const ctx = context.chart.ctx;
+                const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                gradient.addColorStop(0, 'rgba(251, 191, 36, 0.6)');
+                gradient.addColorStop(1, 'rgba(251, 191, 36, 0.1)');
+                return gradient;
+              },
+              borderColor: 'rgba(251, 146, 60, 1)',
+              borderWidth: 3,
+              tension: 0.4,
+              pointRadius: 5,
+              pointHoverRadius: 8,
+              pointBackgroundColor: '#FBBF24',
+              pointBorderColor: '#F59E0B',
+              pointHoverBackgroundColor: '#F59E0B',
+              pointHoverBorderColor: '#FBBF24',
+            },
+          ],
+        }}
+        options={{
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                color: '#D1D5DB',
+                font: { size: 14, weight: 'bold' },
+                boxWidth: 20,
+                usePointStyle: true,
+                pointStyle: 'circle',
+              },
+            },
+            title: {
+              display: true,
+              text: `Total Sales Trend (${trendType.charAt(0).toUpperCase() + trendType.slice(1)})`,
+              color: '#FBBF24',
+              font: { size: 20, weight: 'bold', family: 'Arial, sans-serif' },
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              titleColor: '#FBBF24',
+              bodyColor: '#D1D5DB',
+              borderColor: '#F59E0B',
+              borderWidth: 1,
+              cornerRadius: 8,
+              padding: 12,
+              callbacks: {
+                label: (context) => `Sales: $${context.parsed.y.toFixed(2)}`,
+                title: (tooltipItems) => tooltipItems[0].label,
+              },
+            },
+            datalabels: {
+              display: false, // Disable by default for cleaner look
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                color: '#D1D5DB',
+                font: { size: 12 },
+                callback: (value) => `$${value}`,
+              },
+              grid: { color: 'rgba(209, 213, 219, 0.1)', borderDash: [5, 5] },
+              title: { display: true, text: 'Sales ($)', color: '#FBBF24', font: { size: 14 } },
+            },
+            x: {
+              ticks: {
+                color: '#D1D5DB',
+                font: { size: 12 },
+                maxRotation: 45,
+                minRotation: 45,
+              },
+              grid: { display: false },
+              title: {
+                display: true,
+                text: trendType === 'daily' ? 'Date' : trendType === 'weekly' ? 'Week' : 'Month',
+                color: '#FBBF24',
+                font: { size: 14 },
+              },
+            },
+          },
+          interaction: {
+            mode: 'index',
+            intersect: false,
+          },
+          hover: {
+            mode: 'nearest',
+            intersect: true,
+          },
+        }}
+      />
+    </div>
+    <h4 className="text-lg font-semibold text-gray-200 mt-6 mb-2">{insightsTitle}</h4>
+    {actionableInsights.map((item, index) => {
+      const trendData = aggregatedData.slice(-30);
+      const salesChange = trendData.length > 1 ? ((trendData[trendData.length - 1].sales - trendData[0].sales) / trendData[0].sales) * 100 : 0;
+      const peakSales = Math.max(...trendData.map(d => d.sales));
+      const peakDay = trendData.find(d => d.sales === peakSales)?.date || 'N/A';
+      const avgSales = trendData.length > 0 ? trendData.reduce((sum, d) => sum + d.sales, 0) / trendData.length : 0;
+
+      const enhancedInsights = [
+        `Sales hit $${item.sales.toFixed(2)}—a ${salesChange > 0 ? `${salesChange.toFixed(1)}% surge` : `${Math.abs(salesChange).toFixed(1)}% dip`} this ${trendType}.`,
+        `- **Peak Alert**: $${peakSales.toFixed(2)} on ${new Date(peakDay).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}—replicate that win!`,
+        `- **Ad Blitz**: ${salesChange > 0 ? 'Boost ad spend 20% to ride the wave.' : 'Shift 10% of ad budget to test new hooks.'}`,
+        `- **Promo Play**: ${avgSales > 100 ? 'Drop a flash sale to keep momentum.' : 'Bundle top items to lift AOV.'}`,
+        `- **Stock Check**: ${peakSales > avgSales * 1.5 ? 'Restock 2x your peak day now!' : 'Optimize inventory—cut slow movers.'}`,
+      ];
+
+      return (
+        <div key={index} className="bg-gray-900 p-4 rounded-lg mb-4 shadow-md hover:shadow-lg transition-shadow duration-300">
+          <p className="text-xl text-yellow-300">${item.sales.toFixed(2)}</p>
+          <ul className="list-disc list-inside text-gray-300 text-sm mt-2">
+            {enhancedInsights.map((line, i) => (
+              <li key={i} className="mb-1">{line}</li>
+            ))}
+          </ul>
+        </div>
+      );
+    })}
+  </div>
+)}                    
                                       {selectedReport === 'sales-by-product' && (
                                         <div>
                                           <h3 className="text-2xl font-semibold text-gray-200 mb-4">Sales by Product</h3>
