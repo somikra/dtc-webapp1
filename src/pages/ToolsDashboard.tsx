@@ -710,8 +710,24 @@ export default function ToolsDashboard() {
   const summaryInsights = getSummaryInsights();
 
   const totalSalesChartData: ChartData<'bar'> = {
-    labels: [trendType === 'daily' ? 'Daily Total' : trendType === 'weekly' ? 'Weekly Total' : 'Monthly Total'],
-    datasets: [{ label: 'Sales', data: [totalSales], backgroundColor: 'rgba(251, 191, 36, 0.9)', borderColor: 'rgba(251, 146, 60, 1)', borderWidth: 2, barThickness: 60, borderRadius: 10 }],
+    labels: aggregatedData.map((d) => {
+      const startDate = new Date(d.date);
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + (trendType === 'weekly' ? 6 : trendType === 'monthly' ? 29 : 0));
+      if (endDate > new Date(dateRange.end)) endDate.setDate(new Date(dateRange.end).getDate());
+      return `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+    }),
+    datasets: [
+      {
+        label: 'Sales',
+        data: aggregatedData.map((d) => d.sales),
+        backgroundColor: 'rgba(251, 191, 36, 0.9)',
+        borderColor: 'rgba(251, 146, 60, 1)',
+        borderWidth: 2,
+        barThickness: 20,
+        borderRadius: 10,
+      },
+    ],
   };
 
   const salesByProductChartData: ChartData<'bar'> = {
@@ -749,8 +765,27 @@ export default function ToolsDashboard() {
   };
 
   const salesGrowthChartData: ChartData<'line'> = {
-    labels: aggregatedData.map(d => d.date),
-    datasets: [{ label: 'Sales', data: aggregatedData.map(d => d.sales), borderColor: 'rgba(251, 191, 36, 1)', backgroundColor: 'rgba(251, 191, 36, 0.4)', fill: true, tension: 0.4, pointRadius: 6, pointBackgroundColor: '#FBBF24', pointBorderColor: '#F59E0B', pointHoverRadius: 8 }],
+    labels: aggregatedData.map((d) => {
+      const startDate = new Date(d.date);
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + (trendType === 'weekly' ? 6 : trendType === 'monthly' ? 29 : 0));
+      if (endDate > new Date(dateRange.end)) endDate.setDate(new Date(dateRange.end).getDate());
+      return `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+    }),
+    datasets: [
+      {
+        label: 'Sales',
+        data: aggregatedData.map((d) => d.sales),
+        borderColor: 'rgba(251, 191, 36, 1)',
+        backgroundColor: 'rgba(251, 191, 36, 0.4)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 6,
+        pointBackgroundColor: '#FBBF24',
+        pointBorderColor: '#F59E0B',
+        pointHoverRadius: 8,
+      },
+    ],
   };
 
   const productPerformanceChartData: ChartData<'bar'> = {
@@ -788,7 +823,21 @@ export default function ToolsDashboard() {
     'customer-lifetime-value': { ...trendyChartOptions, plugins: { ...trendyChartOptions.plugins, title: { text: `Customer Lifetime Value (${trendType})` }, datalabels: { formatter: (value) => `$${value.toFixed(2)}` } }, scales: { y: { ...trendyChartOptions.scales.y, title: { text: 'Lifetime Value ($)' } }, x: { ...trendyChartOptions.scales.x, title: { text: 'Customers' } } } },
     'average-order-value': { ...trendyChartOptions, plugins: { ...trendyChartOptions.plugins, title: { text: `Average Order Value (${trendType})` }, datalabels: { formatter: (value) => value ? `$${value.toFixed(2)}` : '' } }, scales: { y: { ...trendyChartOptions.scales.y, title: { text: 'AOV ($)' } }, x: { ...trendyChartOptions.scales.x, title: { text: 'Period' }, ticks: { callback: (value) => value === 0 ? trendType.charAt(0).toUpperCase() + trendType.slice(1) : '' } } } },
     'repeat-purchase-rate': { ...trendyChartOptions, plugins: { ...trendyChartOptions.plugins, title: { text: `Repeat Purchase Rate (${trendType})` }, datalabels: { formatter: (value) => value ? `${value.toFixed(1)}%` : '' } }, scales: { y: { ...trendyChartOptions.scales.y, title: { text: 'Repeat Rate (%)' }, ticks: { callback: (value) => `${value}%` } }, x: { ...trendyChartOptions.scales.x, title: { text: 'Period' }, ticks: { callback: (value) => value === 0 ? trendType.charAt(0).toUpperCase() + trendType.slice(1) : '' } } } },
-    'sales-growth': { ...trendyChartOptions, plugins: { ...trendyChartOptions.plugins, title: { text: `Sales Growth (${trendType})` }, datalabels: { formatter: (value) => `$${value.toFixed(2)}` } }, scales: { y: { ...trendyChartOptions.scales.y, title: { text: 'Sales ($)' } }, x: { ...trendyChartOptions.scales.x, title: { text: trendType.charAt(0).toUpperCase() + trendType.slice(1) } } } },
+    'sales-growth': {
+      ...trendyChartOptions,
+      plugins: {
+        ...trendyChartOptions.plugins,
+        title: { text: `Sales Growth (${trendType.charAt(0).toUpperCase() + trendType.slice(1)})` },
+        datalabels: { formatter: (value) => `$${value.toFixed(2)}` },
+      },
+      scales: {
+        y: { ...trendyChartOptions.scales.y, title: { text: 'Sales ($)' } },
+        x: {
+          ...trendyChartOptions.scales.x,
+          title: { text: `${trendType.charAt(0).toUpperCase() + trendType.slice(1)} Period` },
+        },
+      },
+    },
     'product-performance': { ...trendyChartOptions, plugins: { ...trendyChartOptions.plugins, title: { text: `Product Performance (${trendType})` }, datalabels: { formatter: (value, context) => context.dataset.label === 'Sales' ? `$${value.toFixed(2)}` : value } }, scales: { y: { ...trendyChartOptions.scales.y, title: { text: 'Value' } }, x: { ...trendyChartOptions.scales.x, title: { text: 'Products' } } } },
     'customer-acquisition': { ...trendyChartOptions, plugins: { ...trendyChartOptions.plugins, title: { text: `Customer Acquisition (${trendType})` }, datalabels: { formatter: (value) => `${value}` } }, scales: { y: { ...trendyChartOptions.scales.y, title: { text: 'New Customers' } }, x: { ...trendyChartOptions.scales.x, title: { text: trendType.charAt(0).toUpperCase() + trendType.slice(1) } } } },
   };
