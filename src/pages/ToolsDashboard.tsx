@@ -710,17 +710,16 @@ export default function ToolsDashboard() {
   const summaryInsights = getSummaryInsights();
 
   const totalSalesChartData: ChartData<'bar'> = {
-    labels: aggregatedData.map((d) => {
-      const startDate = new Date(d.date);
-      const endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + (trendType === 'weekly' ? 6 : trendType === 'monthly' ? 29 : 0));
-      if (endDate > new Date(dateRange.end)) endDate.setDate(new Date(dateRange.end).getDate());
-      return `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
-    }),
+    labels: aggregatedData
+      .slice(-30) // Limit to last 30 days for readability, adjust as needed
+      .map((d) => {
+        const date = new Date(d.date);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); // e.g., "Jan 1"
+      }),
     datasets: [
       {
         label: 'Sales',
-        data: aggregatedData.map((d) => d.sales),
+        data: aggregatedData.slice(-30).map((d) => d.sales), // Match data to sliced labels
         backgroundColor: 'rgba(251, 191, 36, 0.9)',
         borderColor: 'rgba(251, 146, 60, 1)',
         borderWidth: 2,
