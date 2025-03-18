@@ -259,8 +259,8 @@ export default function ToolsDashboard() {
             {
               sales: totalSales,
               insight: [
-                `Sales at $${totalSales.toFixed(2)} with ${growthRate.toFixed(1)}% ${isGrowth ? `${trendLabel}ly climb—epic!` : `${trendLabel}ly dip—pivot time!`}`,
-                `Your total sales hit $${totalSales.toFixed(2)}—${isGrowth ? `a ${trendLabel}ly climb worth riding!` : `a ${trendLabel}ly dip to tackle!`}`,
+                `Sales at $${totalSales.toFixed(2)} with ${growthRate.toFixed(1)}% ${isGrowth ? `${trendLabel}ly climb—epic!` : `${trendLabel} dip—pivot time!`}`,
+                `Your total sales hit $${totalSales.toFixed(2)}—${isGrowth ? `a ${trendLabel}ly climb worth riding!` : `a ${trendLabel} dip to tackle!`}`,
                 `**Peak Push**: ${isGrowth ? `Rerun this ${trendLabel}’s best promo.` : `Test a fresh promo this ${trendLabel}.`}`,
                 `**Seasonal Prep**: ${isGrowth ? `Stock up early if this ${trendLabel}’s seasonal.` : `Counter seasonal drags this ${trendLabel}.`}`,
                 `**Channel Test**: ${isGrowth ? `Test a new platform this ${trendLabel}.` : `Stabilize core channels first.`}`,
