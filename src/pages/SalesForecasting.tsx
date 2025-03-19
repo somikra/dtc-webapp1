@@ -65,44 +65,28 @@ const FORECAST_OPTIONS = [
     title: 'Historical Trend',
     icon: <TrendingUp className="h-8 w-8 text-yellow-300" />,
     description: 'Predicts sales based on your past trends—perfect for steady growth!',
-    highlights: [
-      'Uses historical sales patterns',
-      'Great for consistent products',
-      'Simple and reliable',
-    ],
+    highlights: ['Uses historical sales patterns', 'Great for consistent products', 'Simple and reliable'],
   },
   {
     id: 'seasonal-boost',
     title: 'Seasonal Boost',
     icon: <AreaChart className="h-8 w-8 text-yellow-300" />,
     description: 'Factors in seasonal spikes to catch those holiday rushes!',
-    highlights: [
-      'Accounts for seasonality',
-      'Ideal for holiday-driven sales',
-      'Boosts inventory prep',
-    ],
+    highlights: ['Accounts for seasonality', 'Ideal for holiday-driven sales', 'Boosts inventory prep'],
   },
   {
     id: 'growth-aggressive',
     title: 'Growth Aggressive',
     icon: <LineChart className="h-8 w-8 text-yellow-300" />,
     description: 'A bold forecast for scaling fast—aim high and stock up!',
-    highlights: [
-      'Assumes rapid growth',
-      'Perfect for new campaigns',
-      'Risky but rewarding',
-    ],
+    highlights: ['Assumes rapid growth', 'Perfect for new campaigns', 'Risky but rewarding'],
   },
   {
     id: 'product-breakout',
     title: 'Product Breakout',
     icon: <PieChart className="h-8 w-8 text-yellow-300" />,
     description: 'Focuses on top performers to maximize your star products!',
-    highlights: [
-      'Prioritizes top products',
-      'Great for niche sellers',
-      'Drives profitability',
-    ],
+    highlights: ['Prioritizes top products', 'Great for niche sellers', 'Drives profitability'],
   },
 ];
 
@@ -121,7 +105,7 @@ export default function SalesForecasting() {
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setForecastData({ file });
-    setError(null); // Clear any previous errors
+    setError(null);
   };
 
   const handleFileUpload = () => {
@@ -172,7 +156,7 @@ export default function SalesForecasting() {
     window.URL.revokeObjectURL(url);
   };
 
-  const generateForecast = async () => {
+  const generateForecast = () => {
     if (!forecastData.file || !selectedMethod) {
       setError('Please upload a file and select a forecast method.');
       return;
@@ -182,36 +166,59 @@ export default function SalesForecasting() {
     setError(null);
     setForecastResult(null);
 
+    const timeout = setTimeout(() => {
+      setLoading(false);
+      setError('Forecast generation timed out. Please check your file and try again.');
+    }, 10000); // 10-second timeout
+
     Papa.parse(forecastData.file, {
       header: true,
       skipEmptyLines: true,
       complete: (result: Papa.ParseResult<any>) => {
-        console.log('Parsed CSV Data:', result.data); // Debug: Check raw parsed data
-        const salesData: Sale[] = result.data
-          .map((row: any) => ({
-            date: row.date || '',
-            product: row.product || '',
-            sales: parseFloat(row.sales) || 0,
-            quantity: parseInt(row.quantity, 10) || 0,
-          }))
-          .filter(row => row.date && row.product && row.sales > 0); // Ensure valid data
+        clearTimeout(timeout);
+        console.log('Parsed CSV Data:', result.data);
 
-        console.log('Filtered Sales Data:', salesData); // Debug: Check filtered data
-
-        if (salesData.length === 0) {
-          setError('No valid sales data found in the uploaded file. Ensure it has date, product, sales, and quantity columns.');
+        // Validate required columns
+        const requiredColumns = ['date', 'product', 'sales', 'quantity'];
+        const headers = result.meta.fields || [];
+        const missingColumns = requiredColumns.filter(col => !headers.includes(col));
+        if (missingColumns.length > 0) {
+          setError(`Missing required columns: ${missingColumns.join(', ')}. Please use the sample CSV format.`);
           setLoading(false);
           return;
         }
 
-        const forecast = calculateForecast(salesData, selectedMethod);
-        console.log('Generated Forecast:', forecast); // Debug: Check forecast output
-        setForecastResult(forecast);
+        const salesData: Sale[] = result.data
+          .map((row: any) => ({
+            date: row.date?.trim() || '',
+            product: row.product?.trim() || '',
+            sales: parseFloat(row.sales) || 0,
+            quantity: parseInt(row.quantity, 10) || 0,
+          }))
+          .filter(row => row.date && row.product && !isNaN(row.sales) && row.sales > 0 && !isNaN(row.quantity));
+
+        console.log('Filtered Sales Data:', salesData);
+
+        if (salesData.length === 0) {
+          setError('No valid sales data found. Ensure your CSV has valid date, product, sales (>0), and quantity values.');
+          setLoading(false);
+          return;
+        }
+
+        try {
+          const forecast = calculateForecast(salesData, selectedMethod);
+          console.log('Generated Forecast:', forecast);
+          setForecastResult(forecast);
+        } catch (err) {
+          console.error('Forecast Calculation Error:', err);
+          setError('Error calculating forecast. Please ensure your data is valid and try again.');
+        }
         setLoading(false);
       },
       error: (err) => {
-        console.error('Papa Parse Error:', err); // Debug: Log parsing errors
-        setError('Error processing your data. Check the CSV format (date, product, sales, quantity) and try again.');
+        clearTimeout(timeout);
+        console.error('Papa Parse Error:', err);
+        setError('Error parsing your CSV. Check the format (date, product, sales, quantity) and try again.');
         setLoading(false);
       },
     });
@@ -220,7 +227,9 @@ export default function SalesForecasting() {
   const calculateForecast = (data: Sale[], method: string): ForecastResult => {
     const sortedData = data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     const lastDate = new Date(sortedData[sortedData.length - 1].date);
-    const forecastPeriod = 90; // 3 months forecast
+    if (isNaN(lastDate.getTime())) throw new Error('Invalid last date in data');
+
+    const forecastPeriod = 90;
     const forecastDates = Array.from({ length: forecastPeriod }, (_, i) => {
       const date = new Date(lastDate);
       date.setDate(lastDate.getDate() + i + 1);
@@ -273,7 +282,7 @@ export default function SalesForecasting() {
           const month = new Date(date).getMonth();
           return products.map((product, i) => {
             const { avgSales, avgQuantity } = monthlySales[i][month];
-            return { date, product, sales: avgSales * 1.2, quantity: Math.round(avgQuantity * 1.2) }; // 20% seasonal boost
+            return { date, product, sales: avgSales * 1.2, quantity: Math.round(avgQuantity * 1.2) };
           });
         });
 
@@ -286,7 +295,7 @@ export default function SalesForecasting() {
         break;
       }
       case 'growth-aggressive': {
-        const growthRate = 1.3; // 30% growth assumption
+        const growthRate = 1.3;
         const lastDaySales = products.map(product => {
           const productData = data.filter(d => d.product === product);
           const lastSale = productData[productData.length - 1];
@@ -297,7 +306,7 @@ export default function SalesForecasting() {
           lastDaySales.map(({ product, lastSales, lastQuantity }) => ({
             date,
             product,
-            sales: lastSales * Math.pow(growthRate, (i + 1) / 30), // Exponential growth
+            sales: lastSales * Math.pow(growthRate, (i + 1) / 30),
             quantity: Math.round(lastQuantity * Math.pow(growthRate, (i + 1) / 30)),
           }))
         );
@@ -314,14 +323,14 @@ export default function SalesForecasting() {
         const topProducts = products.map(product => {
           const productData = data.filter(d => d.product === product);
           return { product, totalSales: productData.reduce((sum, d) => sum + d.sales, 0) };
-        }).sort((a, b) => b.totalSales - a.totalSales).slice(0, Math.ceil(products.length / 2)); // Top 50%
+        }).sort((a, b) => b.totalSales - a.totalSales).slice(0, Math.ceil(products.length / 2));
 
         const avgSales = topProducts.map(({ product }) => {
           const productData = data.filter(d => d.product === product);
           const totalSales = productData.reduce((sum, d) => sum + d.sales, 0);
           const totalQuantity = productData.reduce((sum, d) => sum + d.quantity, 0);
           const days = [...new Set(productData.map(d => d.date))].length;
-          return { product, avgSales: totalSales / days * 1.5, avgQuantity: totalQuantity / days * 1.5 }; // 50% boost for top performers
+          return { product, avgSales: totalSales / days * 1.5, avgQuantity: totalQuantity / days * 1.5 };
         });
 
         predictions = forecastDates.flatMap(date =>
@@ -357,7 +366,7 @@ export default function SalesForecasting() {
       .reduce((uniqueDates: string[], p) => 
         uniqueDates.includes(p.date) ? uniqueDates : [...uniqueDates, p.date], []
       )
-      .slice(0, 30), // Show first 30 days for clarity
+      .slice(0, 30),
     datasets: products.map(product => ({
       label: product,
       data: forecastResult.predictions
@@ -542,7 +551,7 @@ export default function SalesForecasting() {
                 <button
                   onClick={generateForecast}
                   disabled={loading}
-                  className="mt-8 w-full max-w-md mx-auto px-6 py-3 bg-gradient-to-r from-orange-500 to-yellow-400 text-white rounded-full hover:from-orange-600 hover:to-yellow-500 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center text-lg font-semibold"
+                  className="mt-8 w-full max-w-md mx-auto px-6 py-3 bg-gradient-to-r from-orange-500 to-yellow-400 text-white rounded-full hover:from-orange-600 hover:to-yellow-500 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center text-lg font-semibold disabled:bg-gray-500"
                 >
                   {loading ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : 'Generate Forecast Now'}
                 </button>
