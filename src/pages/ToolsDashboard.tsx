@@ -695,11 +695,16 @@ export default function ToolsDashboard() {
 
   const salesGrowthChartData: ChartData<'line'> = {
     labels: aggregatedData.map((d) => {
-      const startDate = new Date(d.date);
-      const endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + (trendType === 'weekly' ? 6 : trendType === 'monthly' ? 29 : 0));
-      if (endDate > new Date(dateRange.end)) endDate.setDate(new Date(dateRange.end).getDate());
-      return `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+      const date = new Date(d.date);
+      if (trendType === 'daily') {
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      } else {
+        const startDate = new Date(d.date);
+        const endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + (trendType === 'weekly' ? 6 : trendType === 'monthly' ? 29 : 0));
+        if (endDate > new Date(dateRange.end)) endDate.setDate(new Date(dateRange.end).getDate());
+        return `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+      }
     }),
     datasets: [
       {
