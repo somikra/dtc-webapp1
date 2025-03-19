@@ -22,6 +22,7 @@ import {
   Package,
   Megaphone,
   RefreshCw,
+  ArrowRight,
 } from 'lucide-react';
 import Papa from 'papaparse';
 
@@ -298,9 +299,11 @@ export default function SalesForecasting() {
       return { slope, intercept };
     };
 
+    let trends: { product: string; slope: number; intercept: number; avgQuantity: number; avgCost?: number; sku?: string }[] = [];
+
     switch (method) {
       case 'historical-trend': {
-        const trends = products.map(product => {
+        trends = products.map(product => {
           const productData = data.filter(d => d.product === product);
           console.log('Product data for', product, ':', productData);
           const { slope, intercept } = getTrend(productData);
@@ -320,28 +323,122 @@ export default function SalesForecasting() {
             sku,
           }))
         );
-        console.log('Predictions:', predictions);
-
-        totalForecast = predictions.reduce((sum, p) => sum + p.sales, 0);
-        console.log('Total forecast:', totalForecast);
-
-        topPerformers = products.map(product => {
-          const productPredictions = predictions.filter(p => p.product === product);
-          const totalSales = productPredictions.reduce((sum, p) => sum + p.sales, 0);
-          const trend = trends.find(t => t.product === product);
-          const growthRate = trend && trend.intercept !== 0 ? (trend.slope / trend.intercept) * 100 : 0;
-          return { product, totalSales, growthRate };
-        }).sort((a, b) => b.totalSales - a.totalSales).slice(0, 3);
-        console.log('Top performers:', topPerformers);
-
-        actionPlan = generateActionPlan(predictions, forecastDates, range, topPerformers, selectedProduct);
-        console.log('Action plan:', actionPlan);
-
-        insights = generateInsights(predictions, forecastDates, range, topPerformers);
-        console.log('Insights:', insights);
         break;
       }
+
+      case 'seasonal-boost': {
+        trends = products.map(product => {
+          const productData = data.filter(d => d.product === product);
+          const { slope, intercept } = getTrend(productData);
+          const avgQuantity = productData.reduce((sum, d) => sum + d.quantity, 0) / productData.length || 1;
+          const avgCost = productData.reduce((sum, d) => sum + (d.cost || 0), 0) / productData.length || undefined;
+          const sku = productData[0]?.sku;
+          return { product, slope, intercept, avgQuantity, avgCost, sku };
+        });
+
+        predictions = forecastDates.flatMap((date, i) => {
+          const dayIndex = i + 1;
+          const isSeasonalPeak = range === 'day' ? dayIndex % 7 === 0 : range === 'weekly' ? dayIndex % 4 === 0 : dayIndex % 2 === 0;
+          const seasonalMultiplier = isSeasonalPeak ? 1.5 : 1.0;
+
+          return trends.map(({ product, slope, intercept, avgQuantity, avgCost, sku }) => ({
+            date,
+            product,
+            sales: Math.max(0, (intercept + slope * (i + trends.length)) * seasonalMultiplier),
+            quantity: Math.round(avgQuantity * (1 + slope * i / 100) * seasonalMultiplier),
+            cost: avgCost,
+            sku,
+          }));
+        });
+        break;
+      }
+
+      case 'growth-aggressive': {
+        trends = products.map(product => {
+          const productData = data.filter(d => d.product === product);
+          const { slope, intercept } = getTrend(productData);
+          const avgQuantity = productData.reduce((sum, d) => sum + d.quantity, 0) / productData.length || 1;
+          const avgCost = productData.reduce((sum, d) => sum + (d.cost || 0), 0) / productData.length || undefined;
+          const sku = productData[0]?.sku;
+          return { product, slope, intercept, avgQuantity, avgCost, sku };
+        });
+
+        predictions = forecastDates.flatMap((date, i) =>
+          trends.map(({ product, slope, intercept, avgQuantity, avgCost, sku }) => {
+            const growthMultiplier = 1 + (i * 0.1);
+            return {
+              date,
+              product,
+              sales: Math.max(0, (intercept + slope * (i + trends.length)) * growthMultiplier),
+              quantity: Math.round(avgQuantity * (1 + slope * i / 100) * growthMultiplier),
+              cost: avgCost,
+              sku,
+            };
+          })
+        );
+        break;
+      }
+
+      case 'product-breakout': {
+        const productSales = products.map(product => {
+          const productData = data.filter(d => d.product === product);
+          const totalSales = productData.reduce((sum, d) => sum + d.sales, 0);
+          return { product, totalSales };
+        }).sort((a, b) => b.totalSales - a.totalSales);
+
+        const topProducts = productSales.slice(0, Math.ceil(products.length * 0.3));
+        const topProductNames = topProducts.map(p => p.product);
+
+        trends = products.map(product => {
+          const productData = data.filter(d => d.product === product);
+          const { slope, intercept } = getTrend(productData);
+          const avgQuantity = productData.reduce((sum, d) => sum + d.quantity, 0) / productData.length || 1;
+          const avgCost = productData.reduce((sum, d) => sum + (d.cost || 0), 0) / productData.length || undefined;
+          const sku = productData[0]?.sku;
+          return { product, slope, intercept, avgQuantity, avgCost, sku };
+        });
+
+        predictions = forecastDates.flatMap((date, i) =>
+          trends.map(({ product, slope, intercept, avgQuantity, avgCost, sku }) => {
+            const isTopProduct = topProductNames.includes(product);
+            const breakoutMultiplier = isTopProduct ? 1.8 : 0.5;
+            return {
+              date,
+              product,
+              sales: Math.max(0, (intercept + slope * (i + trends.length)) * breakoutMultiplier),
+              quantity: Math.round(avgQuantity * (1 + slope * i / 100) * breakoutMultiplier),
+              cost: avgCost,
+              sku,
+            };
+          })
+        );
+        break;
+      }
+
+      default: {
+        throw new Error(`Unsupported forecast method: ${method}`);
+      }
     }
+
+    console.log('Predictions:', predictions);
+
+    totalForecast = predictions.reduce((sum, p) => sum + p.sales, 0);
+    console.log('Total forecast:', totalForecast);
+
+    topPerformers = products.map(product => {
+      const productPredictions = predictions.filter(p => p.product === product);
+      const totalSales = productPredictions.reduce((sum, p) => sum + p.sales, 0);
+      const trend = trends.find(t => t.product === product);
+      const growthRate = trend && trend.intercept !== 0 ? (trend.slope / trend.intercept) * 100 : 0;
+      return { product, totalSales, growthRate };
+    }).sort((a, b) => b.totalSales - a.totalSales).slice(0, 3);
+    console.log('Top performers:', topPerformers);
+
+    actionPlan = generateActionPlan(predictions, forecastDates, range, topPerformers, selectedProduct);
+    console.log('Action plan:', actionPlan);
+
+    insights = generateInsights(predictions, forecastDates, range, topPerformers);
+    console.log('Insights:', insights);
 
     return { method, totalForecast, topPerformers, predictions, actionPlan, insights };
   };
@@ -445,7 +542,6 @@ export default function SalesForecasting() {
     navigate('/tools');
   };
 
-  // Wrap rendering in try-catch to catch any rendering errors
   try {
     return (
       <div className="bg-gray-900 min-h-screen text-white font-poppins relative overflow-hidden">
@@ -715,127 +811,146 @@ export default function SalesForecasting() {
                 {/* Pro Insights Section */}
                 {forecastResult.insights && forecastResult.insights.length > 0 ? (
                   <section>
-                    <h3 className="text-2xl font-bold text-yellow-300 mb-6 flex items-center">Pro Insights <svg className="inline h-6 w-6 ml-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg></h3>
-                    <div className="bg-gray-700 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 bg-gradient-to-br from-gray-800 to-gray-900 card-tilt">
-                      <ul className="list-disc list-inside text-gray-300 text-sm space-y-2">
-                        {forecastResult.insights.map((insight, i) => (
-                          <li key={i} className="flex items-center">
-                            <span className="mr-2 text-green-400">➡️</span>
-                            <span dangerouslySetInnerHTML={{ __html: insight }} />
-                          </li>
-                        ))}
-                      </ul>
-                      <div className="mt-4 flex justify-end">
-                        <button onClick={downloadForecastCSV} className="px-4 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 flex items-center text-sm shadow-lg hover:shadow-xl transition-all duration-300">
-                          <Download className="h-4 w-4 mr-1 animate-bounce" /> Download Forecast
-                        </button>
+                    <h3 className="text-2xl font-bold text-yellow-300 mb-6 flex items-center">
+                      Pro Insights{' '}
+                      <svg
+                        className="inline h-6 w-6 ml-2 animate-pulse"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                          ></path>
+                        </svg>
+                      </h3>
+                      <div className="bg-gray-700 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 bg-gradient-to-br from-gray-800 to-gray-900 card-tilt">
+                        <ul className="list-none text-gray-300 text-sm space-y-2">
+                          {forecastResult.insights.map((insight, i) => (
+                            <li key={i} className="flex items-center">
+                              <ArrowRight className="h-4 w-4 text-green-400 mr-2" />
+                              <span dangerouslySetInnerHTML={{ __html: insight }} />
+                            </li>
+                          ))}
+                        </ul>
+                        <div className="mt-4 flex justify-end">
+                          <button
+                            onClick={downloadForecastCSV}
+                            className="px-4 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 flex items-center text-sm shadow-lg hover:shadow-xl transition-all duration-300"
+                          >
+                            <Download className="h-4 w-4 mr-1 animate-bounce" /> Download Forecast
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  </section>
-                ) : (
-                  <div className="text-gray-400">No insights available.</div>
-                )}
-
-                <button
-                  onClick={() => {
-                    setForecastResult(null);
-                    setError(null);
-                    setSelectedProduct(null);
-                  }}
-                  className="w-full max-w-md mx-auto px-6 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-500 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center text-sm"
-                >
-                  Generate New Forecast <RefreshCw className="inline h-5 w-5 ml-2" />
-                </button>
-              </div>
-            )}
+                    </section>
+                  ) : (
+                    <div className="text-gray-400">No insights available.</div>
+                  )}
+  
+                  <button
+                    onClick={() => {
+                      setForecastResult(null);
+                      setError(null);
+                      setSelectedProduct(null);
+                    }}
+                    className="w-full max-w-md mx-auto px-6 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-500 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center text-sm"
+                  >
+                    Generate New Forecast <RefreshCw className="inline h-5 w-5 ml-2" />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    );
-  } catch (renderError) {
-    console.error('Rendering Error:', renderError);
-    return (
-      <div className="bg-gray-900 min-h-screen text-white font-poppins p-8">
-        <h1 className="text-3xl font-bold text-red-500">Error Rendering Page</h1>
-        <p className="mt-4 text-gray-300">An unexpected error occurred while rendering the page: {renderError.message}</p>
-        <p className="mt-2 text-gray-400">Please refresh the page and try again, or contact support if the issue persists.</p>
-      </div>
-    );
+      );
+    } catch (renderError) {
+      console.error('Rendering Error:', renderError);
+      return (
+        <div className="bg-gray-900 min-h-screen text-white font-poppins p-8">
+          <h1 className="text-3xl font-bold text-red-500">Error Rendering Page</h1>
+          <p className="mt-4 text-gray-300">An unexpected error occurred while rendering the page: {renderError.message}</p>
+          <p className="mt-2 text-gray-400">Please refresh the page and try again, or contact support if the issue persists.</p>
+        </div>
+      );
+    }
   }
-}
-
-// Add custom CSS for masonry, tilt, animations, and tooltips
-const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
-  .font-poppins {
-    font-family: 'Poppins', sans-serif;
-  }
-  .masonry-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
-    padding: 1rem;
-  }
-  .card-tilt {
-    transition: transform 0.3s, box-shadow 0.3s;
-    position: relative;
-  }
-  .card-tilt:hover {
-    transform: perspective(1000px) rotateX(5deg) rotateY(5deg) scale(1.02);
-    box-shadow: 0 10px 20px rgba(0, 255, 0, 0.3);
-  }
-  .card-tilt[data-tooltip]:hover:after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    font-size: 0.875rem;
-    white-space: nowrap;
-    z-index: 10;
-    margin-bottom: 0.5rem;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-  .card-tilt:hover[data-tooltip]:after {
-    opacity: 1;
-  }
-  .animate-gradient-x {
-    background-size: 200% 200%;
-    animation: gradientShift 10s ease infinite;
-  }
-  .animate-pulse {
-    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-  .animate-bounce {
-    animation: bounce 1s infinite;
-  }
-  .animate-star-twinkle {
-    animation: starTwinkle 5s infinite;
-  }
-  @keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
-  @keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px); }
-  }
-  @keyframes starTwinkle {
-    0%, 100% { opacity: 0.1; }
-    50% { opacity: 0.3; }
-  }
-  body { margin: 0; }
-`;
-const styleSheet = document.createElement('style');
-styleSheet.textContent = styles;
-document.head.appendChild(styleSheet);
+  
+  // Add custom CSS for masonry, tilt, animations, and tooltips
+  const styles = `
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+    .font-poppins {
+      font-family: 'Poppins', sans-serif;
+    }
+    .masonry-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+      padding: 1rem;
+    }
+    .card-tilt {
+      transition: transform 0.3s, box-shadow 0.3s;
+      position: relative;
+    }
+    .card-tilt:hover {
+      transform: perspective(1000px) rotateX(5deg) rotateY(5deg) scale(1.02);
+      box-shadow: 0 10px 20px rgba(0, 255, 0, 0.3);
+    }
+    .card-tilt[data-tooltip]:hover:after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      white-space: nowrap;
+      z-index: 10;
+      margin-bottom: 0.5rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .card-tilt:hover[data-tooltip]:after {
+      opacity: 1;
+    }
+    .animate-gradient-x {
+      background-size: 200% 200%;
+      animation: gradientShift 10s ease infinite;
+    }
+    .animate-pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    .animate-bounce {
+      animation: bounce 1s infinite;
+    }
+    .animate-star-twinkle {
+      animation: starTwinkle 5s infinite;
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+    @keyframes starTwinkle {
+      0%, 100% { opacity: 0.1; }
+      50% { opacity: 0.3; }
+    }
+    body { margin: 0; }
+  `;
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = styles;
+  document.head.appendChild(styleSheet);
