@@ -181,15 +181,21 @@ export default function SalesForecasting() {
           .map((row: any) => ({
             date: row.date?.trim() || '',
             product: row.product?.trim() || '',
-            sales: parseFloat(row.sales) || 0,
-            quantity: parseInt(row.quantity, 10) || 0,
+            sales: parseFloat(row.sales),
+            quantity: parseInt(row.quantity, 10),
           }))
-          .filter(row => row.date && row.product && !isNaN(row.sales) && row.sales > 0 && !isNaN(row.quantity));
+          .filter(row => 
+            row.date && 
+            row.product && 
+            !isNaN(row.sales) && 
+            row.sales >= 0 && // Allow zero sales
+            !isNaN(row.quantity)
+          );
 
         console.log('Filtered Sales Data:', salesData);
 
         if (salesData.length === 0) {
-          setError('No valid sales data found. Ensure your CSV has valid date, product, sales (>0), and quantity values.');
+          setError('No valid sales data found. Ensure your CSV has valid date, product, sales (>=0), and quantity values.');
           setLoading(false);
           return;
         }
@@ -200,7 +206,7 @@ export default function SalesForecasting() {
           setForecastResult(forecast);
         } catch (err) {
           console.error('Forecast Calculation Error:', err);
-          setError('Error calculating forecast. Please ensure your data is valid and try again.');
+          setError(`Error calculating forecast: ${err.message}. Please check your data and try again.`);
         }
         setLoading(false);
       },
@@ -218,7 +224,7 @@ export default function SalesForecasting() {
     const lastDate = new Date(sortedData[sortedData.length - 1].date);
     if (isNaN(lastDate.getTime())) throw new Error('Invalid last date in data');
 
-    const step = range === 'daily' ? 1 : range === 'weekly' ? 7 : 30; // Days per step
+    const step = range === 'daily' ? 1 : range === 'weekly' ? 7 : 30;
     const forecastSteps = Math.ceil(duration / (range === 'daily' ? 1 : range === 'weekly' ? 7 : 30));
     const forecastDates = Array.from({ length: forecastSteps }, (_, i) => {
       const date = new Date(lastDate);
@@ -230,17 +236,19 @@ export default function SalesForecasting() {
     let predictions: { date: string; product: string; sales: number; quantity: number }[] = [];
     let insights: string[] = [];
 
-    // Simple linear regression for trend calculation
     const getTrend = (productData: Sale[]) => {
       const n = productData.length;
-      if (n < 2) return { slope: 0, intercept: productData[0]?.sales || 0 };
+      if (n < 2) {
+        const avgSales = productData[0]?.sales || 0;
+        return { slope: 0, intercept: avgSales };
+      }
       const x = productData.map((_, i) => i);
       const y = productData.map(d => d.sales);
       const xMean = x.reduce((a, b) => a + b, 0) / n;
       const yMean = y.reduce((a, b) => a + b, 0) / n;
       const numerator = x.reduce((sum, xi, i) => sum + (xi - xMean) * (y[i] - yMean), 0);
       const denominator = x.reduce((sum, xi) => sum + (xi - xMean) ** 2, 0);
-      const slope = numerator / denominator;
+      const slope = denominator === 0 ? 0 : numerator / denominator; // Avoid division by zero
       const intercept = yMean - slope * xMean;
       return { slope, intercept };
     };
@@ -250,7 +258,7 @@ export default function SalesForecasting() {
         const trends = products.map(product => {
           const productData = data.filter(d => d.product === product);
           const { slope, intercept } = getTrend(productData);
-          const avgQuantity = productData.reduce((sum, d) => sum + d.quantity, 0) / productData.length;
+          const avgQuantity = productData.reduce((sum, d) => sum + d.quantity, 0) / productData.length || 1;
           return { product, slope, intercept, avgQuantity };
         });
 
@@ -258,8 +266,8 @@ export default function SalesForecasting() {
           trends.map(({ product, slope, intercept, avgQuantity }) => ({
             date,
             product,
-            sales: Math.max(0, intercept + slope * (i + productData.length)),
-            quantity: Math.round(avgQuantity * (1 + slope * i / 100)), // Quantity scales with trend
+            sales: Math.max(0, intercept + slope * (i + trends.length)),
+            quantity: Math.round(avgQuantity * (1 + slope * i / 100)),
           }))
         );
 
@@ -279,7 +287,7 @@ export default function SalesForecasting() {
             const totalSales = monthData.reduce((sum, d) => sum + d.sales, 0);
             const totalQuantity = monthData.reduce((sum, d) => sum + d.quantity, 0);
             const days = monthData.length || 1;
-            return { month, avgSales: totalSales / days, avgQuantity: totalQuantity / days };
+            return { month, avgSales: totalSales / days || 0, avgQuantity: totalQuantity / days || 1 };
           });
         });
 
@@ -287,7 +295,7 @@ export default function SalesForecasting() {
           const month = new Date(date).getMonth();
           return products.map((product, i) => {
             const { avgSales, avgQuantity } = monthlyTrends[i][month];
-            const baseSales = avgSales * 1.2; // 20% seasonal boost
+            const baseSales = avgSales * 1.2;
             return { date, product, sales: baseSales, quantity: Math.round(avgQuantity * 1.2) };
           });
         });
@@ -301,7 +309,7 @@ export default function SalesForecasting() {
         break;
       }
       case 'growth-aggressive': {
-        const growthRate = 0.01; // 1% daily growth compounded
+        const growthRate = 0.01;
         const lastSales = products.map(product => {
           const productData = data.filter(d => d.product === product);
           const lastSale = productData[productData.length - 1];
@@ -334,15 +342,15 @@ export default function SalesForecasting() {
         const trends = topProducts.map(({ product }) => {
           const productData = data.filter(d => d.product === product);
           const { slope, intercept } = getTrend(productData);
-          const avgQuantity = productData.reduce((sum, d) => sum + d.quantity, 0) / productData.length;
-          return { product, slope: slope * 1.5, intercept, avgQuantity }; // 50% trend boost
+          const avgQuantity = productData.reduce((sum, d) => sum + d.quantity, 0) / productData.length || 1;
+          return { product, slope: slope * 1.5, intercept, avgQuantity };
         });
 
         predictions = forecastDates.flatMap((date, i) =>
           trends.map(({ product, slope, intercept, avgQuantity }) => ({
             date,
             product,
-            sales: Math.max(0, intercept + slope * (i + productData.length)),
+            sales: Math.max(0, intercept + slope * (i + trends.length)),
             quantity: Math.round(avgQuantity * (1 + slope * i / 100)),
           }))
         );
@@ -371,7 +379,7 @@ export default function SalesForecasting() {
       .reduce((uniqueDates: string[], p) => 
         uniqueDates.includes(p.date) ? uniqueDates : [...uniqueDates, p.date], []
       )
-      .slice(0, range === 'daily' ? 30 : range === 'weekly' ? 12 : 6), // Adjust chart length
+      .slice(0, range === 'daily' ? 30 : range === 'weekly' ? 12 : 6),
     datasets: products.map(product => ({
       label: product,
       data: forecastResult.predictions
