@@ -17,6 +17,11 @@ import {
   ShoppingCart,
   MessageCircle,
   DollarSign,
+  AlertTriangle,
+  TrendingDown,
+  Package,
+  Megaphone,
+  RefreshCw,
 } from 'lucide-react';
 import Papa from 'papaparse';
 
@@ -43,14 +48,14 @@ interface ForecastResult {
 }
 
 const FORECAST_OPTIONS = [
-  { id: 'historical-trend', title: 'Historical Trend', icon: <TrendingUp className="h-8 w-8 text-yellow-300 animate-pulse" />, description: 'Ride your epic past wins! 🎉', highlights: ['Trend-powered', 'Steady gains', 'Rock-solid'] },
-  { id: 'seasonal-boost', title: 'Seasonal Boost', icon: <AreaChart className="h-8 w-8 text-yellow-300 animate-pulse" />, description: 'Crush seasonal spikes! 🔥', highlights: ['Seasonal magic', 'Holiday hype', 'Stock surge'] },
-  { id: 'growth-aggressive', title: 'Growth Aggressive', icon: <LineChart className="h-8 w-8 text-yellow-300 animate-pulse" />, description: 'Blast off with bold growth! 🚀', highlights: ['Rapid rise', 'Ad-fueled', 'Big rewards'] },
-  { id: 'product-breakout', title: 'Product Breakout', icon: <PieChart className="h-8 w-8 text-yellow-300 animate-pulse" />, description: 'Spotlight your stars! 🌟', highlights: ['Top hits', 'Profit boost', 'Niche domination'] },
+  { id: 'historical-trend', title: 'Historical Trend', icon: <TrendingUp className="h-8 w-8 text-yellow-300 animate-pulse" />, description: 'Leverage past performance for steady predictions.', highlights: ['Trend-based', 'Reliable', 'Stable'] },
+  { id: 'seasonal-boost', title: 'Seasonal Boost', icon: <AreaChart className="h-8 w-8 text-yellow-300 animate-pulse" />, description: 'Capitalize on seasonal sales patterns.', highlights: ['Seasonal focus', 'Holiday-ready', 'Stock surge'] },
+  { id: 'growth-aggressive', title: 'Growth Aggressive', icon: <LineChart className="h-8 w-8 text-yellow-300 animate-pulse" />, description: 'Aggressively predict and drive growth.', highlights: ['Rapid growth', 'Ad-driven', 'High potential'] },
+  { id: 'product-breakout', title: 'Product Breakout', icon: <PieChart className="h-8 w-8 text-yellow-300 animate-pulse" />, description: 'Highlight top-performing products.', highlights: ['Top products', 'Profit focus', 'Niche strength'] },
 ];
 
 const RANGE_OPTIONS = [
-  { value: 'daily', label: 'Daily' },
+  { value: 'day', label: 'Day' },
   { value: 'weekly', label: 'Weekly' },
   { value: 'monthly', label: 'Monthly' },
 ];
@@ -66,7 +71,7 @@ export default function SalesForecasting() {
   const [forecastResult, setForecastResult] = useState<ForecastResult | null>(null);
   const [uploadMessage, setUploadMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [range, setRange] = useState<string>('daily');
+  const [range, setRange] = useState<string>('day');
   const [duration, setDuration] = useState<number>(30);
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
 
@@ -78,11 +83,11 @@ export default function SalesForecasting() {
 
   const handleFileUpload = () => {
     if (!forecastData.file) {
-      setUploadMessage('Oops! Grab a file to kick things off! 🎉');
+      setUploadMessage('Oops! Please upload a file to proceed!');
       setTimeout(() => setUploadMessage(null), 3000);
       return;
     }
-    setUploadMessage('Boom! Data’s in—let’s roll! 🔥');
+    setUploadMessage('Success! Data uploaded—let’s proceed!');
     setTimeout(() => setUploadMessage(null), 3000);
     setIsUploadModalOpen(false);
   };
@@ -137,11 +142,11 @@ export default function SalesForecasting() {
 
   const generateForecast = () => {
     if (!forecastData.file || !selectedMethod) {
-      setError('Hold up! Upload a file and pick a method! 🚀');
+      setError('Please upload a file and select a method!');
       return;
     }
     if (duration <= 0) {
-      setError('Whoa! Duration must be > 0! 🎉');
+      setError('Duration must be greater than 0!');
       return;
     }
 
@@ -151,7 +156,7 @@ export default function SalesForecasting() {
 
     const timeout = setTimeout(() => {
       setLoading(false);
-      setError('Timeout! Check your file and retry! 🔥');
+      setError('Timeout! Please check your file and retry!');
     }, 10000);
 
     Papa.parse(forecastData.file, {
@@ -165,7 +170,7 @@ export default function SalesForecasting() {
         const headers = result.meta.fields || [];
         const missingColumns = requiredColumns.filter(col => !headers.includes(col));
         if (missingColumns.length > 0) {
-          setError(`Missing columns: ${missingColumns.join(', ')}. Use sample CSV! 🎉`);
+          setError(`Missing columns: ${missingColumns.join(', ')}. Use sample CSV!`);
           setLoading(false);
           return;
         }
@@ -184,7 +189,7 @@ export default function SalesForecasting() {
         console.log('Filtered Sales Data:', salesData);
 
         if (salesData.length === 0) {
-          setError('No valid data! Check your CSV! 🚀');
+          setError('No valid data! Please check your CSV!');
           setLoading(false);
           return;
         }
@@ -195,14 +200,14 @@ export default function SalesForecasting() {
           setForecastResult(forecast);
         } catch (err) {
           console.error('Forecast Error:', err);
-          setError(`Oops! Forecast failed: ${err.message}. Retry! 🔥`);
+          setError(`Forecast failed: ${err.message}. Please retry!`);
         }
         setLoading(false);
       },
       error: (err) => {
         clearTimeout(timeout);
         console.error('Parse Error:', err);
-        setError('CSV error! Check format and retry! 🎉');
+        setError('CSV error! Please check format and retry!');
         setLoading(false);
       },
     });
@@ -213,8 +218,8 @@ export default function SalesForecasting() {
     const lastDate = new Date(sortedData[sortedData.length - 1].date);
     if (isNaN(lastDate.getTime())) throw new Error('Invalid date!');
 
-    const step = range === 'daily' ? 1 : range === 'weekly' ? 7 : 30;
-    const forecastSteps = Math.ceil(duration / (range === 'daily' ? 1 : range === 'weekly' ? 7 : 30));
+    const step = range === 'day' ? 1 : range === 'weekly' ? 7 : 30;
+    const forecastSteps = Math.ceil(duration / (range === 'day' ? 1 : range === 'weekly' ? 7 : 30));
     const forecastDates = Array.from({ length: forecastSteps }, (_, i) => {
       const date = new Date(lastDate);
       date.setDate(lastDate.getDate() + (i + 1) * step);
@@ -276,7 +281,6 @@ export default function SalesForecasting() {
         insights = generateInsights(predictions, forecastDates, range, topPerformers);
         break;
       }
-      // Similar adjustments for other methods (omitted for brevity)
     }
 
     return { method, totalForecast, topPerformers, predictions, actionPlan, insights };
@@ -287,24 +291,24 @@ export default function SalesForecasting() {
     const steps = Math.min(5, forecastDates.length);
     const actionEngine = {
       highGrowth: (product: string, quantity: number) => [
-        `🚀 Stock ${quantity} ${product} units! Launch a 20% ad blitz for max exposure!`,
-        `🎯 Partner with influencers to hype ${product}—growth is soaring!`,
-        `💡 Bundle ${product} with ${topPerformers[0]?.product || 'top seller'} for a 25% sales boost!`,
+        `Launch a <Megaphone /> 20% ad campaign for ${product} with forecasted stock of ${quantity} units!`,
+        `Create a <Package /> bundle with ${product} and ${topPerformers[0]?.product || 'top seller'}—stock ${Math.round(quantity * 1.2)} units!`,
+        `Partner with influencers for ${product}—prepare ${quantity} units for restock!`,
       ],
       moderateGrowth: (product: string, quantity: number) => [
-        `🌟 Stock ${quantity} ${product} units! Kick off a 10% promo to keep momentum!`,
-        `📧 Send a targeted email blast for ${product} to loyal customers!`,
-        `🎉 Highlight ${product} on social media with a flash sale!`,
+        `Initiate a <ShoppingCart /> 10% discount on ${product} with ${quantity} units forecasted!`,
+        `Send a <MessageCircle /> targeted email for ${product}—stock ${Math.round(quantity)} units!`,
+        `Promote ${product} on social media—forecasted stock: ${quantity} units!`,
       ],
       stable: (product: string, quantity: number) => [
-        `⚖️ Stock ${quantity / 2} ${product} units! Monitor trends—consider a loyalty discount!`,
-        `🔧 Test a bundle with ${product} and ${topPerformers[1]?.product || 'top seller'} to stir sales!`,
-        `📊 Analyze ${product} feedback—adjust pricing if needed!`,
+        `Monitor <Clock /> trends for ${product}—stock ${Math.round(quantity / 2)} units!`,
+        `Test a <Package /> bundle with ${product} and ${topPerformers[1]?.product || 'top seller'}—stock ${Math.round(quantity * 0.75)} units!`,
+        `Analyze <RefreshCw /> feedback for ${product}—prepare ${Math.round(quantity / 2)} units!`,
       ],
       declining: (product: string, quantity: number) => [
-        `🔥 Stock ${quantity / 3} ${product} units! Clear with a 15% discount now!`,
-        `💰 Cross-sell ${product} with ${topPerformers[0]?.product || 'top seller'} to recover sales!`,
-        `⏰ Restock ${product} only if demand spikes—focus on top sellers!`,
+        `Clear <TrendingDown /> excess ${product} with a 15% discount—stock ${Math.round(quantity / 3)} units!`,
+        `Cross-sell <Package /> ${product} with ${topPerformers[0]?.product || 'top seller'}—forecast ${Math.round(quantity / 2)} units!`,
+        `Restock <RefreshCw /> ${product} only if demand rises—current forecast: ${Math.round(quantity / 4)} units!`,
       ],
     };
 
@@ -313,6 +317,10 @@ export default function SalesForecasting() {
       const productData = selectedProduct
         ? predictions.filter(p => p.product === selectedProduct && p.date === date)
         : predictions.filter(p => p.date === date);
+      if (productData.length === 0) {
+        plan.push(`${range} ${i + 1} (${date}): ⚠️ No data for action planning!`);
+        continue;
+      }
       const dailySales = productData.reduce((sum, p) => sum + p.sales, 0);
       const dailyQuantity = Math.round(dailySales / 50);
       const targetProduct = selectedProduct || productData[0]?.product || topPerformers[0]?.product || products[0];
@@ -321,18 +329,13 @@ export default function SalesForecasting() {
       const isSpike = prevQuantities.length > 1 && dailyQuantity > prevQuantities.reduce((a, b) => a + b, 0) / prevQuantities.length * 1.5;
 
       let actionSet;
-      if (growthTrend > 10 && isSpike) {
-        actionSet = actionEngine.highGrowth;
-      } else if (growthTrend > 0) {
-        actionSet = actionEngine.moderateGrowth;
-      } else if (growthTrend === 0) {
-        actionSet = actionEngine.stable;
-      } else {
-        actionSet = actionEngine.declining;
-      }
+      if (growthTrend > 10 && isSpike) actionSet = actionEngine.highGrowth;
+      else if (growthTrend > 0) actionSet = actionEngine.moderateGrowth;
+      else if (growthTrend === 0) actionSet = actionEngine.stable;
+      else actionSet = actionEngine.declining;
 
       const action = actionSet(targetProduct, dailyQuantity)[Math.floor(Math.random() * actionSet(targetProduct, dailyQuantity).length)];
-      plan.push(`${range} ${i + 1} (${date}): ${action}`);
+      plan.push(`${range} ${i + 1} (${date}): ${action.replace('<Megaphone />', <Megaphone className="inline h-4 w-4 text-green-400" />).replace('<Package />', <Package className="inline h-4 w-4 text-blue-400" />).replace('<ShoppingCart />', <ShoppingCart className="inline h-4 w-4 text-purple-400" />).replace('<MessageCircle />', <MessageCircle className="inline h-4 w-4 text-yellow-400" />).replace('<Clock />', <Clock className="inline h-4 w-4 text-red-400" />).replace('<RefreshCw />', <RefreshCw className="inline h-4 w-4 text-orange-400" />).replace('<TrendingDown />', <TrendingDown className="inline h-4 w-4 text-red-500" />)}`);
     }
 
     return plan;
@@ -342,8 +345,8 @@ export default function SalesForecasting() {
     const insights: string[] = [];
     const products = [...new Set(predictions.map(p => p.product))];
 
-    insights.push(`🎉 Total forecast: $${predictions.reduce((sum, p) => sum + p.sales, 0).toFixed(2)} over ${forecastDates.length} ${range}(s)! 🚀`);
-    insights.push(`🌟 Top rockstar: ${topPerformers[0]?.product} with $${topPerformers[0]?.totalSales.toFixed(2)} and ${topPerformers[0]?.growthRate.toFixed(1)}% growth!`);
+    insights.push(<span>Total forecast: $<TrendingUp className="inline h-4 w-4 text-green-400" /> {predictions.reduce((sum, p) => sum + p.sales, 0).toFixed(2)} over {forecastDates.length} {range}(s)!</span>);
+    insights.push(<span>Top performer: <Star className="inline h-4 w-4 text-yellow-400" /> {topPerformers[0]?.product} with ${topPerformers[0]?.totalSales.toFixed(2)} and {topPerformers[0]?.growthRate.toFixed(1)}% growth!</span>);
 
     products.forEach(product => {
       const productPreds = predictions.filter(p => p.product === product);
@@ -354,18 +357,18 @@ export default function SalesForecasting() {
       const isSeasonal = productPreds.some(p => p.sales > avgSales * 1.2);
       const lowStockRisk = productPreds.some(p => p.quantity < 10);
 
-      insights.push(`🔥 ${product}: Forecasted $${totalSales.toFixed(2)}! ${growthRate > 5 ? 'Skyrocketing—push hard!' : growthRate > 0 ? 'Steady climb—keep it rolling!' : 'Watch out—needs a boost!'}`);
-      if (peakDate) insights.push(`⏰ ${product} peaks on ${peakDate}! Stock up 2x and launch a flash sale!`);
-      if (isSeasonal) insights.push(`🌴 ${product} shows seasonal vibes! Align with holidays for a 20% sales spike!`);
-      if (lowStockRisk) insights.push(`⚠️ ${product} at risk of stockout! Order ${Math.max(...productPreds.map(p => p.quantity)) * 1.5} units now!`);
-      if (growthRate > 10) insights.push(`🚀 ${product} is a growth beast! Invest in PPC ads for a 3x ROI!`);
-      if (growthRate < 0) insights.push(`🔧 ${product} dipping! Bundle with ${topPerformers[0]?.product || 'top seller'} or offer a loyalty discount!`);
+      insights.push(<span>{product}: Forecasted $<TrendingUp className="inline h-4 w-4 text-green-400" /> {totalSales.toFixed(2)}! {growthRate > 5 ? 'Strong growth—push marketing efforts!' : growthRate > 0 ? 'Steady progress—maintain momentum!' : 'Sales are declining—consider promotional strategies!'}</span>);
+      if (peakDate) insights.push(<span>Peak date: <Clock className="inline h-4 w-4 text-red-400" /> {peakDate}! Stock 2x and launch a sale!</span>);
+      if (isSeasonal) insights.push(<span>Seasonal trend: <AreaChart className="inline h-4 w-4 text-blue-400" /> {product}! Align with holidays for a 20% boost!</span>);
+      if (lowStockRisk) insights.push(<span>Low stock risk: <AlertTriangle className="inline h-4 w-4 text-red-500" /> {product}! Order {Math.max(...productPreds.map(p => p.quantity)) * 1.5} units now!</span>);
+      if (growthRate > 10) insights.push(<span>High growth: <TrendingUp className="inline h-4 w-4 text-green-400" /> {product}! Invest in PPC ads for 3x ROI!</span>);
+      if (growthRate < 0) insights.push(<span>Declining: <TrendingDown className="inline h-4 w-4 text-red-500" /> {product}! Bundle with {topPerformers[0]?.product || 'top seller'} or offer discounts!</span>);
       if (productPreds.length > 2) {
         const trend = productPreds.map(p => p.sales).reduce((a, b, i, arr) => i > 0 ? a + (b - arr[i - 1]) : a, 0) / (productPreds.length - 1);
-        insights.push(`📈 ${product} trend: ${trend > 0 ? 'Upward!' : 'Downward!'} Adjust stock by ${trend > 0 ? '+' : ''}${Math.abs(trend).toFixed(0)} units/day!`);
+        insights.push(<span>Trend: <LineChart className="inline h-4 w-4 text-purple-400" /> {product} {trend > 0 ? 'upward' : 'downward'}! Adjust stock by {trend > 0 ? '+' : ''}{Math.abs(trend).toFixed(0)} units/day!</span>);
       }
-      insights.push(`💡 Cross-sell ${product} with ${topPerformers[1]?.product || 'top seller'} for a 15% uplift!`);
-      if (productPreds.some(p => p.cost)) insights.push(`💰 ${product} ROI: Target ${avgSales / (productPreds[0]?.cost || 1) * 100}% margin with smart pricing!`);
+      insights.push(<span>Cross-sell: <Package className="inline h-4 w-4 text-blue-400" /> {product} with {topPerformers[1]?.product || 'top seller'} for a 15% uplift!</span>);
+      if (productPreds.some(p => p.cost)) insights.push(<span>ROI: <DollarSign className="inline h-4 w-4 text-yellow-400" /> {product} target {avgSales / (productPreds[0]?.cost || 1) * 100}% margin with smart pricing!</span>);
     });
 
     return insights.slice(0, 10);
@@ -400,14 +403,14 @@ export default function SalesForecasting() {
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/diagmonds.png')]"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <h1 className="text-5xl md:text-6xl font-bold text-center tracking-tight text-white drop-shadow-lg">
-            AI-Powered <span className="text-yellow-300">Sales Forecasting</span> 🚀
+            AI-Powered <span className="text-yellow-300">Sales Forecasting</span> <TrendingUp className="inline h-8 w-8 animate-pulse" />
           </h1>
           <p className="mt-6 text-xl text-gray-100 text-center max-w-3xl mx-auto">
-            Unleash your DTC superpowers and dominate sales! 🎉
+            Unleash your sales potential with cutting-edge insights!
           </p>
           <div className="mt-4 bg-gray-800 bg-opacity-80 p-4 rounded-xl shadow-lg text-center max-w-2xl mx-auto transform hover:scale-105 transition-all duration-300">
             <p className="text-yellow-300 font-semibold text-lg">
-              🔥 Your data, your rules—no saving, just pure magic! 🌟
+              Your data, your control—no saving, pure analytics power!
             </p>
           </div>
         </div>
@@ -465,7 +468,7 @@ export default function SalesForecasting() {
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/noise.png')] opacity-5"></div>
           <div className="flex items-center justify-between mb-6 relative z-10">
             <h2 className="text-3xl md:text-4xl font-bold text-white drop-shadow-md flex items-center">
-              Sales Forecasting 🎉<span className="text-yellow-300 ml-2 animate-pulse">🚀</span>
+              Sales Forecasting <TrendingUp className="inline h-6 w-6 text-yellow-300 ml-2 animate-pulse" />
             </h2>
             <button onClick={() => setIsUploadModalOpen(true)} className="px-4 py-2 bg-orange-500 text-white rounded-full hover:bg-orange-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center text-sm">
               <Upload className="h-4 w-4 mr-1 animate-bounce" /> Load Sales Data
@@ -476,7 +479,7 @@ export default function SalesForecasting() {
           {isUploadModalOpen && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-gray-800 p-6 rounded-2xl shadow-2xl w-full max-w-md transform hover:scale-102 transition-all duration-300">
-                <h3 className="text-lg font-semibold text-white mb-4">Load Your Sales Data 🚀</h3>
+                <h3 className="text-lg font-semibold text-white mb-4">Load Your Sales Data <Upload className="inline h-5 w-5 text-yellow-300" /></h3>
                 <p className="text-gray-400 text-sm mb-4">Upload CSV: date, product, sales, quantity, cost (opt), sku (opt).</p>
                 <input type="file" accept=".csv" onChange={handleFileChange} className="w-full px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm mb-4" />
                 <div className="flex justify-between items-center mb-4">
@@ -505,7 +508,7 @@ export default function SalesForecasting() {
           {/* Forecast Options */}
           {!forecastResult && (
             <div>
-              <h3 className="text-xl md:text-2xl font-semibold text-gray-200 mb-6">Pick Your Forecast Vibe! 🌟</h3>
+              <h3 className="text-xl md:text-2xl font-semibold text-gray-200 mb-6">Select Your Forecasting Method <PieChart className="inline h-5 w-5 text-yellow-300" /></h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {FORECAST_OPTIONS.map(option => (
                   <div
@@ -562,7 +565,7 @@ export default function SalesForecasting() {
                     disabled={loading}
                     className="w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-yellow-400 text-white rounded-full hover:from-orange-600 hover:to-yellow-500 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center text-lg md:text-xl font-semibold disabled:bg-gray-500"
                   >
-                    {loading ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : 'Generate Epic Forecast Now! 🚀'}
+                    {loading ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : 'Generate Forecast Now! <TrendingUp className="inline h-5 w-5" />'}
                   </button>
                 </div>
               )}
@@ -571,65 +574,71 @@ export default function SalesForecasting() {
 
           {/* Forecast Results */}
           {forecastResult && (
-            <div className="masonry-grid gap-6 relative z-10">
-              {/* Crush It Forecast Card */}
-              <div className="masonry-item bg-gray-700 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 bg-gradient-to-br from-gray-800 to-gray-900 card-tilt">
-                <h3 className="text-lg md:text-xl font-bold text-yellow-300 mb-2 flex items-center">
-                  Crush It Forecast! 🎉<span className="ml-2 animate-pulse">🚀</span>
-                </h3>
-                <p className="text-2xl md:text-3xl font-bold text-white drop-shadow-md">${forecastResult.totalForecast.toFixed(2)}</p>
-                <p className="text-sm md:text-base text-gray-400">Over {duration} {range}(s)</p>
-              </div>
-
-              {/* Top Rockstars Cards */}
-              {forecastResult.topPerformers.map((performer, index) => (
-                <div key={index} className="masonry-item bg-gray-700 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 bg-gradient-to-br from-gray-800 to-gray-900 card-tilt">
-                  <div className="flex items-center mb-2">
-                    <Star className="text-yellow-300 mr-2 animate-pulse" />
-                    <h3 className="text-lg md:text-xl font-bold text-white">Rockstar #{index + 1}: {performer.product}</h3>
+            <div className="space-y-12">
+              {/* Forecast Section */}
+              <section>
+                <h3 className="text-2xl font-bold text-yellow-300 mb-6 flex items-center">Forecast Overview <TrendingUp className="inline h-6 w-6 ml-2 animate-pulse" /></h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="bg-gray-700 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 bg-gradient-to-br from-gray-800 to-gray-900 card-tilt">
+                    <h4 className="text-lg font-bold text-white mb-2">Total Forecast</h4>
+                    <p className="text-2xl font-bold text-white drop-shadow-md">${forecastResult.totalForecast.toFixed(2)}</p>
+                    <p className="text-sm text-gray-400">Over {duration} {range}(s)</p>
                   </div>
-                  <p className="text-gray-300 text-sm md:text-base">Sales: ${performer.totalSales.toFixed(2)}</p>
-                  <p className="text-gray-300 text-sm md:text-base">Growth: {performer.growthRate.toFixed(1)}%</p>
-                  <div className="mt-2 text-xs text-gray-400">Hover for ROI hint!</div>
-                  <span className="tooltip hidden group-hover:block absolute bg-gray-800 p-2 rounded-md text-white text-xs mt-2">
-                    Est. ROI: ${(performer.totalSales / (forecastResult.predictions.find(p => p.product === performer.product)?.cost || 1) * 100).toFixed(1)}%
-                  </span>
                 </div>
-              ))}
+              </section>
 
-              {/* Action-Packed Plan Cards */}
-              {forecastResult.actionPlan.map((action, index) => (
-                <div key={index} className="masonry-item bg-gray-700 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 bg-gradient-to-br from-gray-800 to-gray-900 card-tilt">
-                  <div className="flex items-center mb-2">
-                    <Target className="text-neon-green mr-2 animate-pulse" />
-                    <h3 className="text-lg md:text-xl font-bold text-white">Action #{index + 1}</h3>
-                  </div>
-                  <p className="text-gray-300 text-sm md:text-base">{action}</p>
-                  <div className="mt-2 text-xs text-gray-400">Hover for urgency!</div>
-                  <span className="tooltip hidden group-hover:block absolute bg-gray-800 p-2 rounded-md text-white text-xs mt-2">
-                    {getPriorityFlag(forecastResult.predictions.find(p => p.date === action.split('(')[1].split(')')[0])?.quantity || 0, []) || 'Normal'}
-                  </span>
-                </div>
-              ))}
-
-              {/* Pro Tips Card */}
-              <div className="masonry-item md:col-span-2 lg:col-span-3 bg-gray-700 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 bg-gradient-to-br from-gray-800 to-gray-900 card-tilt">
-                <h3 className="text-lg md:text-xl font-bold text-yellow-300 mb-2 flex items-center">
-                  Pro Tips! 🔥<span className="ml-2 animate-pulse">💡</span>
-                </h3>
-                <ul className="list-disc list-inside text-gray-300 text-sm md:text-base space-y-2">
-                  {forecastResult.insights.map((insight, i) => (
-                    <li key={i} className="flex items-center">
-                      <span className="mr-2 text-neon-green">➡️</span>{insight}
-                    </li>
+              {/* Rockstar Products Section */}
+              <section>
+                <h3 className="text-2xl font-bold text-yellow-300 mb-6 flex items-center">Top Performers <Star className="inline h-6 w-6 ml-2 animate-pulse" /></h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {forecastResult.topPerformers.map((performer, index) => (
+                    <div key={index} className="bg-gray-700 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 bg-gradient-to-br from-gray-800 to-gray-900 card-tilt" data-tooltip={`Est. ROI: ${(performer.totalSales / (forecastResult.predictions.find(p => p.product === performer.product)?.cost || 1) * 100).toFixed(1)}%`}>
+                      <div className="flex items-center mb-2">
+                        <Star className="text-yellow-300 mr-2 animate-pulse" />
+                        <h4 className="text-lg font-bold text-white">Performer #{index + 1}: {performer.product}</h4>
+                      </div>
+                      <p className="text-gray-300 text-sm">Sales: ${performer.totalSales.toFixed(2)}</p>
+                      <p className="text-gray-300 text-sm">Growth: {performer.growthRate.toFixed(1)}%</p>
+                    </div>
                   ))}
-                </ul>
-                <div className="mt-4 flex justify-end">
-                  <button onClick={downloadForecastCSV} className="px-4 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 flex items-center text-sm md:text-base shadow-lg hover:shadow-xl transition-all duration-300">
-                    <Download className="h-4 w-4 mr-1 animate-bounce" /> Download Forecast
-                  </button>
                 </div>
-              </div>
+              </section>
+
+              {/* Action Plan Section */}
+              <section>
+                <h3 className="text-2xl font-bold text-yellow-300 mb-6 flex items-center">Action Plan <Target className="inline h-6 w-6 ml-2 animate-pulse" /></h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {forecastResult.actionPlan.map((action, index) => (
+                    <div key={index} className="bg-gray-700 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 bg-gradient-to-br from-gray-800 to-gray-900 card-tilt" data-tooltip={getPriorityFlag(forecastResult.predictions.find(p => p.date === action.split('(')[1].split(')')[0])?.quantity || 0, []) || 'Normal'}>
+                      <div className="flex items-center mb-2">
+                        <Target className="text-green-400 mr-2 animate-pulse" />
+                        <h4 className="text-lg font-bold text-white">Action #{index + 1}</h4>
+                      </div>
+                      <p className="text-gray-300 text-sm" dangerouslySetInnerHTML={{ __html: action }}></p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* Pro Tips Section */}
+              <section>
+                <h3 className="text-2xl font-bold text-yellow-300 mb-6 flex items-center">Pro Insights <Lightbulb className="inline h-6 w-6 ml-2 animate-pulse" /></h3>
+                <div className="bg-gray-700 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 bg-gradient-to-br from-gray-800 to-gray-900 card-tilt">
+                  <ul className="list-disc list-inside text-gray-300 text-sm space-y-2">
+                    {forecastResult.insights.map((insight, i) => (
+                      <li key={i} className="flex items-center">
+                        <span className="mr-2 text-green-400">➡️</span>
+                        <span dangerouslySetInnerHTML={{ __html: insight.toString() }} />
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-4 flex justify-end">
+                    <button onClick={downloadForecastCSV} className="px-4 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 flex items-center text-sm shadow-lg hover:shadow-xl transition-all duration-300">
+                      <Download className="h-4 w-4 mr-1 animate-bounce" /> Download Forecast
+                    </button>
+                  </div>
+                </div>
+              </section>
 
               <button
                 onClick={() => {
@@ -637,9 +646,9 @@ export default function SalesForecasting() {
                   setError(null);
                   setSelectedProduct(null);
                 }}
-                className="masonry-item md:col-span-2 lg:col-span-3 w-full max-w-md mx-auto px-6 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-500 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center text-sm md:text-base"
+                className="w-full max-w-md mx-auto px-6 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-500 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center text-sm"
               >
-                Try Another Epic Forecast! 🎉
+                Generate New Forecast <RefreshCw className="inline h-5 w-5 ml-2" />
               </button>
             </div>
           )}
@@ -649,7 +658,7 @@ export default function SalesForecasting() {
   );
 }
 
-// Add custom CSS for masonry, tilt, and animations
+// Add custom CSS for masonry, tilt, animations, and tooltips
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
   .font-poppins {
@@ -661,15 +670,33 @@ const styles = `
     gap: 1.5rem;
     padding: 1rem;
   }
-  .masonry-item {
-    break-inside: avoid;
-  }
   .card-tilt {
     transition: transform 0.3s, box-shadow 0.3s;
+    position: relative;
   }
   .card-tilt:hover {
     transform: perspective(1000px) rotateX(5deg) rotateY(5deg) scale(1.02);
     box-shadow: 0 10px 20px rgba(0, 255, 0, 0.3);
+  }
+  .card-tilt[data-tooltip]:hover:after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    z-index: 10;
+    margin-bottom: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .card-tilt:hover[data-tooltip]:after {
+    opacity: 1;
   }
   .animate-gradient-x {
     background-size: 200% 200%;
@@ -683,12 +710,6 @@ const styles = `
   }
   .animate-star-twinkle {
     animation: starTwinkle 5s infinite;
-  }
-  .text-neon-green {
-    color: #00ff00;
-  }
-  .tooltip {
-    z-index: 10;
   }
   @keyframes gradientShift {
     0% { background-position: 0% 50%; }
