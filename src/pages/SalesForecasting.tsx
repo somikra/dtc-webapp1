@@ -11,6 +11,12 @@ import {
   LineChart,
   PieChart,
   AreaChart,
+  Target,
+  Star,
+  Clock,
+  ShoppingCart,
+  MessageCircle,
+  DollarSign,
 } from 'lucide-react';
 import Papa from 'papaparse';
 
@@ -279,6 +285,28 @@ export default function SalesForecasting() {
   const generateActionPlan = (predictions: { date: string; product: string; sales: number; quantity: number; cost?: number; sku?: string }[], forecastDates: string[], range: string, topPerformers: { product: string; totalSales: number; growthRate: number }[], selectedProduct: string | null) => {
     const plan: string[] = [];
     const steps = Math.min(5, forecastDates.length);
+    const actionEngine = {
+      highGrowth: (product: string, quantity: number) => [
+        `🚀 Stock ${quantity} ${product} units! Launch a 20% ad blitz for max exposure!`,
+        `🎯 Partner with influencers to hype ${product}—growth is soaring!`,
+        `💡 Bundle ${product} with ${topPerformers[0]?.product} for a 25% sales boost!`,
+      ],
+      moderateGrowth: (product: string, quantity: number) => [
+        `🌟 Stock ${quantity} ${product} units! Kick off a 10% promo to keep momentum!`,
+        `📧 Send a targeted email blast for ${product} to loyal customers!`,
+        `🎉 Highlight ${product} on social media with a flash sale!`,
+      ],
+      stable: (product: string, quantity: number) => [
+        `⚖️ Stock ${quantity / 2} ${product} units! Monitor trends—consider a loyalty discount!`,
+        `🔧 Test a bundle with ${product} and ${topPerformers[1]?.product} to stir sales!`,
+        `📊 Analyze ${product} feedback—adjust pricing if needed!`,
+      ],
+      declining: (product: string, quantity: number) => [
+        `🔥 Stock ${quantity / 3} ${product} units! Clear with a 15% discount now!`,
+        `💰 Cross-sell ${product} with ${topPerformers[0]?.product} to recover sales!`,
+        `⏰ Restock ${product} only if demand spikes—focus on top sellers!`,
+      ],
+    };
 
     for (let i = 0; i < steps; i++) {
       const date = forecastDates[i];
@@ -287,24 +315,16 @@ export default function SalesForecasting() {
         : predictions.filter(p => p.date === date);
       const dailySales = productData.reduce((sum, p) => sum + p.sales, 0);
       const dailyQuantity = Math.round(dailySales / 50);
-      const targetProduct = selectedProduct || topPerformers[0]?.product || products[0];
+      const targetProduct = selectedProduct || productData[0]?.product || topPerformers[0]?.product || products[0];
       const growthTrend = topPerformers.find(tp => tp.product === targetProduct)?.growthRate || 0;
       const prevQuantities = predictions.filter(p => p.product === targetProduct && new Date(p.date) < new Date(date)).map(p => p.quantity);
       const isSpike = prevQuantities.length > 1 && dailyQuantity > prevQuantities.reduce((a, b) => a + b, 0) / prevQuantities.length * 1.5;
-
-      let action = `${range} ${i + 1} (${date}): `;
-      if (growthTrend > 10 && isSpike) {
-        action += `🚀 Stock ${dailyQuantity} ${targetProduct} units ASAP! Launch a 15% ad boost—huge growth incoming!`;
-      } else if (growthTrend > 5) {
-        action += `🎉 Stock ${dailyQuantity} ${targetProduct} units! Ramp up email campaigns for max impact!`;
-      } else if (growthTrend > 0) {
-        action += `🌟 Stock ${dailyQuantity} ${targetProduct} units! Try a 5% off promo to ignite sales!`;
-      } else if (growthTrend === 0) {
-        action += `⚠️ Stock ${dailyQuantity / 2} ${targetProduct} units! Monitor closely—consider a bundle deal if flat!`;
-      } else if (growthTrend < 0) {
-        action += `🔥 Stock ${dailyQuantity / 3} ${targetProduct} units! Clear with a 15% discount or cross-sell with top sellers!`;
-      }
-      plan.push(action);
+      const actionSet = growthTrend > 10 && isSpike ? actionEngine.highGrowth
+        : growthTrend > 0 ? actionEngine.moderateGrowth
+        : growthTrend === 0 ? actionEngine.stable
+        : actionEngine.declining;
+      const action = actionSet[targetProduct][Math.floor(Math.random() * actionSet.length)].replace('[product]', targetProduct).replace('[quantity]', dailyQuantity.toString());
+      plan.push(`${range} ${i + 1} (${date}): ${action}`);
     }
 
     return plan;
@@ -340,7 +360,7 @@ export default function SalesForecasting() {
       if (productPreds.some(p => p.cost)) insights.push(`💰 ${product} ROI: Target ${avgSales / (productPreds[0]?.cost || 1) * 100}% margin with smart pricing!`);
     });
 
-    return insights.slice(0, 10); // Limit to 10 for readability
+    return insights.slice(0, 10);
   };
 
   const handleSignOut = async () => {
@@ -349,8 +369,9 @@ export default function SalesForecasting() {
   };
 
   return (
-    <div className="bg-gray-900 min-h-screen text-white font-poppins">
+    <div className="bg-gray-900 min-h-screen text-white font-poppins relative overflow-hidden">
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10 animate-star-twinkle"></div>
       {uploadMessage && (
         <div className="fixed top-4 right-4 z-50 animate-fade-in">
           <div className={`p-4 rounded-xl shadow-lg ${uploadMessage.includes('Error') ? 'bg-red-600' : 'bg-green-600'} text-white flex items-center transition-all duration-300 hover:shadow-xl`}>
@@ -432,7 +453,7 @@ export default function SalesForecasting() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-2xl p-8 relative overflow-hidden">
+        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl p-8 relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/noise.png')] opacity-5"></div>
           <div className="flex items-center justify-between mb-6 relative z-10">
             <h2 className="text-3xl md:text-4xl font-bold text-white drop-shadow-md flex items-center">
@@ -446,7 +467,7 @@ export default function SalesForecasting() {
           {/* Upload Modal */}
           {isUploadModalOpen && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-gray-800 p-6 rounded-xl shadow-2xl w-full max-w-md transform hover:scale-102 transition-all duration-300">
+              <div className="bg-gray-800 p-6 rounded-2xl shadow-2xl w-full max-w-md transform hover:scale-102 transition-all duration-300">
                 <h3 className="text-lg font-semibold text-white mb-4">Load Your Sales Data 🚀</h3>
                 <p className="text-gray-400 text-sm mb-4">Upload CSV: date, product, sales, quantity, cost (opt), sku (opt).</p>
                 <input type="file" accept=".csv" onChange={handleFileChange} className="w-full px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm mb-4" />
@@ -482,7 +503,7 @@ export default function SalesForecasting() {
                   <div
                     key={option.id}
                     onClick={() => setSelectedMethod(option.id)}
-                    className={`bg-gray-700 p-6 rounded-xl shadow-lg cursor-pointer transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl border-2 ${selectedMethod === option.id ? 'border-yellow-300' : 'border-transparent hover:border-yellow-300'} hover:bg-gradient-to-br hover:from-gray-600 hover:to-gray-800`}
+                    className={`bg-gray-700 p-6 rounded-2xl shadow-lg cursor-pointer transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl border-2 ${selectedMethod === option.id ? 'border-yellow-300' : 'border-transparent hover:border-yellow-300'} hover:bg-gradient-to-br hover:from-gray-600 hover:to-gray-800`}
                   >
                     <div className="flex items-center justify-center mb-4">{option.icon}</div>
                     <h4 className="text-lg md:text-xl font-bold text-white mb-2 text-center">{option.title}</h4>
@@ -542,9 +563,9 @@ export default function SalesForecasting() {
 
           {/* Forecast Results */}
           {forecastResult && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
-              {/* Crush It Forecast Tile */}
-              <div className="bg-gray-700 p-6 rounded-xl shadow-2xl transform hover:scale-102 transition-all duration-300 bg-gradient-to-br from-gray-800 to-gray-900">
+            <div className="masonry-grid gap-6 relative z-10">
+              {/* Crush It Forecast Card */}
+              <div className="masonry-item bg-gray-700 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 bg-gradient-to-br from-gray-800 to-gray-900 card-tilt">
                 <h3 className="text-lg md:text-xl font-bold text-yellow-300 mb-2 flex items-center">
                   Crush It Forecast! 🎉<span className="ml-2 animate-pulse">🚀</span>
                 </h3>
@@ -552,55 +573,39 @@ export default function SalesForecasting() {
                 <p className="text-sm md:text-base text-gray-400">Over {duration} {range}(s)</p>
               </div>
 
-              {/* Top Rockstars Tile */}
-              <div className="bg-gray-700 p-6 rounded-xl shadow-2xl transform hover:scale-102 transition-all duration-300 bg-gradient-to-br from-gray-800 to-gray-900">
-                <h3 className="text-lg md:text-xl font-bold text-yellow-300 mb-2 flex items-center">
-                  Top Rockstars! 🌟<span className="ml-2 animate-pulse">🔥</span>
-                </h3>
-                {forecastResult.topPerformers.length > 0 ? (
-                  <ul className="space-y-2">
-                    {forecastResult.topPerformers.map((performer, i) => (
-                      <li key={i} className="text-gray-300 text-sm md:text-base">
-                        <span className="font-bold text-white">{performer.product}</span><br />
-                        Sales: ${performer.totalSales.toFixed(2)}<br />
-                        Growth: {performer.growthRate.toFixed(1)}%
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-gray-400 text-sm md:text-base">No rockstars yet! 🎉 Let’s find some!</p>
-                )}
-              </div>
-
-              {/* Action-Packed Plan Tile */}
-              <div className="bg-gray-700 p-6 rounded-xl shadow-2xl transform hover:scale-102 transition-all duration-300 bg-gradient-to-br from-gray-800 to-gray-900">
-                <h3 className="text-lg md:text-xl font-bold text-yellow-300 mb-2 flex items-center">
-                  Action-Packed Plan! 🚀<span className="ml-2 animate-pulse">🎯</span>
-                </h3>
-                <div className="mb-4">
-                  <label className="block text-sm md:text-base font-medium text-gray-300 mb-1">Filter by Product</label>
-                  <select
-                    value={selectedProduct || ''}
-                    onChange={(e) => setSelectedProduct(e.target.value || null)}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-full text-white focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm md:text-base"
-                  >
-                    <option value="">All Products</option>
-                    {[...new Set(forecastResult.predictions.map(p => p.product))].map(product => (
-                      <option key={product} value={product}>{product}</option>
-                    ))}
-                  </select>
+              {/* Top Rockstars Cards */}
+              {forecastResult.topPerformers.map((performer, index) => (
+                <div key={index} className="masonry-item bg-gray-700 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 bg-gradient-to-br from-gray-800 to-gray-900 card-tilt">
+                  <div className="flex items-center mb-2">
+                    <Star className="text-yellow-300 mr-2 animate-pulse" />
+                    <h3 className="text-lg md:text-xl font-bold text-white">Rockstar #{index + 1}: {performer.product}</h3>
+                  </div>
+                  <p className="text-gray-300 text-sm md:text-base">Sales: ${performer.totalSales.toFixed(2)}</p>
+                  <p className="text-gray-300 text-sm md:text-base">Growth: {performer.growthRate.toFixed(1)}%</p>
+                  <div className="mt-2 text-xs text-gray-400">Hover for ROI hint!</div>
+                  <span className="tooltip hidden group-hover:block absolute bg-gray-800 p-2 rounded-md text-white text-xs mt-2">
+                    Est. ROI: {(performer.totalSales / (forecastResult.predictions.find(p => p.product === performer.product)?.cost || 1) * 100).toFixed(1)}%
+                  </span>
                 </div>
-                <ul className="list-disc list-inside text-gray-300 text-sm md:text-base space-y-2">
-                  {forecastResult.actionPlan.map((action, i) => (
-                    <li key={i} className="flex items-center">
-                      <span className="mr-2 text-neon-green">➡️</span>{action}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              ))}
 
-              {/* Pro Tips Tile */}
-              <div className="md:col-span-2 lg:col-span-3 bg-gray-700 p-6 rounded-xl shadow-2xl transform hover:scale-102 transition-all duration-300 bg-gradient-to-br from-gray-800 to-gray-900">
+              {/* Action-Packed Plan Cards */}
+              {forecastResult.actionPlan.map((action, index) => (
+                <div key={index} className="masonry-item bg-gray-700 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 bg-gradient-to-br from-gray-800 to-gray-900 card-tilt">
+                  <div className="flex items-center mb-2">
+                    <Target className="text-neon-green mr-2 animate-pulse" />
+                    <h3 className="text-lg md:text-xl font-bold text-white">Action #{index + 1}</h3>
+                  </div>
+                  <p className="text-gray-300 text-sm md:text-base">{action}</p>
+                  <div className="mt-2 text-xs text-gray-400">Hover for urgency!</div>
+                  <span className="tooltip hidden group-hover:block absolute bg-gray-800 p-2 rounded-md text-white text-xs mt-2">
+                    {getPriorityFlag(forecastResult.predictions.find(p => p.date === action.split('(')[1].split(')')[0])?.quantity || 0, []) || 'Normal'}
+                  </span>
+                </div>
+              ))}
+
+              {/* Pro Tips Card */}
+              <div className="masonry-item md:col-span-2 lg:col-span-3 bg-gray-700 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 bg-gradient-to-br from-gray-800 to-gray-900 card-tilt">
                 <h3 className="text-lg md:text-xl font-bold text-yellow-300 mb-2 flex items-center">
                   Pro Tips! 🔥<span className="ml-2 animate-pulse">💡</span>
                 </h3>
@@ -624,7 +629,7 @@ export default function SalesForecasting() {
                   setError(null);
                   setSelectedProduct(null);
                 }}
-                className="md:col-span-2 lg:col-span-3 w-full max-w-md mx-auto px-6 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-500 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center text-sm md:text-base"
+                className="masonry-item md:col-span-2 lg:col-span-3 w-full max-w-md mx-auto px-6 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-500 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center text-sm md:text-base"
               >
                 Try Another Epic Forecast! 🎉
               </button>
@@ -636,11 +641,27 @@ export default function SalesForecasting() {
   );
 }
 
-// Add custom CSS for neon green and animations
+// Add custom CSS for masonry, tilt, and animations
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
   .font-poppins {
     font-family: 'Poppins', sans-serif;
+  }
+  .masonry-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem;
+  }
+  .masonry-item {
+    break-inside: avoid;
+  }
+  .card-tilt {
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .card-tilt:hover {
+    transform: perspective(1000px) rotateX(5deg) rotateY(5deg) scale(1.02);
+    box-shadow: 0 10px 20px rgba(0, 255, 0, 0.3);
   }
   .animate-gradient-x {
     background-size: 200% 200%;
@@ -652,8 +673,14 @@ const styles = `
   .animate-bounce {
     animation: bounce 1s infinite;
   }
+  .animate-star-twinkle {
+    animation: starTwinkle 5s infinite;
+  }
   .text-neon-green {
     color: #00ff00;
+  }
+  .tooltip {
+    z-index: 10;
   }
   @keyframes gradientShift {
     0% { background-position: 0% 50%; }
@@ -667,6 +694,10 @@ const styles = `
   @keyframes bounce {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-5px); }
+  }
+  @keyframes starTwinkle {
+    0%, 100% { opacity: 0.1; }
+    50% { opacity: 0.3; }
   }
   body { margin: 0; }
 `;
