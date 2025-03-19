@@ -149,75 +149,83 @@ export default function SalesForecasting() {
       setError('Duration must be greater than 0!');
       return;
     }
-
+  
     setLoading(true);
     setError(null);
     setForecastResult(null);
-
-    const timeout = setTimeout(() => {
+  
+    try {
+      const timeout = setTimeout(() => {
+        setLoading(false);
+        setError('Timeout! Please check your file and retry!');
+      }, 10000);
+  
+      Papa.parse(forecastData.file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (result: Papa.ParseResult<any>) => {
+          clearTimeout(timeout);
+          console.log('Parsed CSV Data:', result.data);
+  
+          const requiredColumns = ['date', 'product', 'sales', 'quantity'];
+          const headers = result.meta.fields || [];
+          const missingColumns = requiredColumns.filter(col => !headers.includes(col));
+          if (missingColumns.length > 0) {
+            setError(`Missing columns: ${missingColumns.join(', ')}. Use sample CSV!`);
+            setLoading(false);
+            return;
+          }
+  
+          const salesData: Sale[] = result.data
+            .map((row: any) => ({
+              date: row.date?.trim() || '',
+              product: row.product?.trim() || '',
+              sales: parseFloat(row.sales),
+              quantity: parseInt(row.quantity, 10),
+              cost: parseFloat(row.cost) || undefined,
+              sku: row.sku?.trim() || undefined,
+            }))
+            .filter(row => row.date && row.product && !isNaN(row.sales) && row.sales >= 0 && !isNaN(row.quantity));
+  
+          console.log('Filtered Sales Data:', salesData);
+  
+          if (salesData.length === 0) {
+            setError('No valid data! Please check your CSV!');
+            setLoading(false);
+            return;
+          }
+  
+          try {
+            const forecast = calculateForecast(salesData, selectedMethod, range, duration);
+            console.log('Generated Forecast:', forecast);
+            setForecastResult(forecast);
+          } catch (err) {
+            console.error('Forecast Calculation Error:', err);
+            setError(`Forecast calculation failed: ${err.message}. Please retry!`);
+          }
+          setLoading(false);
+        },
+        error: (err) => {
+          clearTimeout(timeout);
+          console.error('Parse Error:', err);
+          setError('CSV parsing error! Please check format and retry!');
+          setLoading(false);
+        },
+      });
+    } catch (err) {
+      console.error('Generate Forecast Error:', err);
+      setError('Unexpected error during forecast generation: ' + err.message);
       setLoading(false);
-      setError('Timeout! Please check your file and retry!');
-    }, 10000);
-
-    Papa.parse(forecastData.file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (result: Papa.ParseResult<any>) => {
-        clearTimeout(timeout);
-        console.log('Parsed CSV Data:', result.data);
-
-        const requiredColumns = ['date', 'product', 'sales', 'quantity'];
-        const headers = result.meta.fields || [];
-        const missingColumns = requiredColumns.filter(col => !headers.includes(col));
-        if (missingColumns.length > 0) {
-          setError(`Missing columns: ${missingColumns.join(', ')}. Use sample CSV!`);
-          setLoading(false);
-          return;
-        }
-
-        const salesData: Sale[] = result.data
-          .map((row: any) => ({
-            date: row.date?.trim() || '',
-            product: row.product?.trim() || '',
-            sales: parseFloat(row.sales),
-            quantity: parseInt(row.quantity, 10),
-            cost: parseFloat(row.cost) || undefined,
-            sku: row.sku?.trim() || undefined,
-          }))
-          .filter(row => row.date && row.product && !isNaN(row.sales) && row.sales >= 0 && !isNaN(row.quantity));
-
-        console.log('Filtered Sales Data:', salesData);
-
-        if (salesData.length === 0) {
-          setError('No valid data! Please check your CSV!');
-          setLoading(false);
-          return;
-        }
-
-        try {
-          const forecast = calculateForecast(salesData, selectedMethod, range, duration);
-          console.log('Generated Forecast:', forecast);
-          setForecastResult(forecast);
-        } catch (err) {
-          console.error('Forecast Error:', err);
-          setError(`Forecast failed: ${err.message}. Please retry!`);
-        }
-        setLoading(false);
-      },
-      error: (err) => {
-        clearTimeout(timeout);
-        console.error('Parse Error:', err);
-        setError('CSV error! Please check format and retry!');
-        setLoading(false);
-      },
-    });
+    }
   };
 
   const calculateForecast = (data: Sale[], method: string, range: string, duration: number): ForecastResult => {
     const sortedData = data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    const lastDate = new Date(sortedData[sortedData.length - 1].date);
-    if (isNaN(lastDate.getTime())) throw new Error('Invalid date!');
-
+    const lastDate = new Date(sortedData[sortedData.length - 1]?.date);
+    if (isNaN(lastDate.getTime())) {
+      throw new Error('Invalid date in data! Please check your CSV.');
+    }
+  
     const step = range === 'day' ? 1 : range === 'weekly' ? 7 : 30;
     const forecastSteps = Math.ceil(duration / (range === 'day' ? 1 : range === 'weekly' ? 7 : 30));
     const forecastDates = Array.from({ length: forecastSteps }, (_, i) => {
@@ -225,14 +233,18 @@ export default function SalesForecasting() {
       date.setDate(lastDate.getDate() + (i + 1) * step);
       return date.toISOString().split('T')[0];
     });
-
+  
     const products = [...new Set(data.map(d => d.product))];
+    if (products.length === 0) {
+      throw new Error('No products found in data!');
+    }
+  
     let predictions: { date: string; product: string; sales: number; quantity: number; cost?: number; sku?: string }[] = [];
     let totalForecast = 0;
     let topPerformers: { product: string; totalSales: number; growthRate: number }[] = [];
     let actionPlan: string[] = [];
     let insights: string[] = [];
-
+  
     const getTrend = (productData: Sale[]) => {
       const n = productData.length;
       if (n < 2) return { slope: 0, intercept: productData[0]?.sales || 0 };
@@ -246,7 +258,7 @@ export default function SalesForecasting() {
       const intercept = yMean - slope * xMean;
       return { slope, intercept };
     };
-
+  
     switch (method) {
       case 'historical-trend': {
         const trends = products.map(product => {
@@ -257,7 +269,7 @@ export default function SalesForecasting() {
           const sku = productData[0]?.sku;
           return { product, slope, intercept, avgQuantity, avgCost, sku };
         });
-
+  
         predictions = forecastDates.flatMap((date, i) =>
           trends.map(({ product, slope, intercept, avgQuantity, avgCost, sku }) => ({
             date,
@@ -268,7 +280,7 @@ export default function SalesForecasting() {
             sku,
           }))
         );
-
+  
         totalForecast = predictions.reduce((sum, p) => sum + p.sales, 0);
         topPerformers = products.map(product => {
           const productPredictions = predictions.filter(p => p.product === product);
@@ -276,13 +288,13 @@ export default function SalesForecasting() {
           const growthRate = trends.find(t => t.product === product)!.slope / trends.find(t => t.product === product)!.intercept * 100 || 0;
           return { product, totalSales, growthRate };
         }).sort((a, b) => b.totalSales - a.totalSales).slice(0, 3);
-
+  
         actionPlan = generateActionPlan(predictions, forecastDates, range, topPerformers, selectedProduct);
         insights = generateInsights(predictions, forecastDates, range, topPerformers);
         break;
       }
     }
-
+  
     return { method, totalForecast, topPerformers, predictions, actionPlan, insights };
   };
 
@@ -565,7 +577,15 @@ export default function SalesForecasting() {
                     disabled={loading}
                     className="w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-yellow-400 text-white rounded-full hover:from-orange-600 hover:to-yellow-500 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center text-lg md:text-xl font-semibold disabled:bg-gray-500"
                   >
-                    {loading ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : 'Generate Forecast Now! <TrendingUp className="inline h-5 w-5" />'}
+                    {loading ? (
+  <>
+    <Loader2 className="h-6 w-6 animate-spin mr-2" /> Loading...
+  </>
+) : (
+  <>
+    Generate Forecast Now! <TrendingUp className="inline h-5 w-5 ml-2" />
+  </>
+)}
                   </button>
                 </div>
               )}
