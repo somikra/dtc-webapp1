@@ -289,7 +289,7 @@ export default function SalesForecasting() {
       highGrowth: (product: string, quantity: number) => [
         `🚀 Stock ${quantity} ${product} units! Launch a 20% ad blitz for max exposure!`,
         `🎯 Partner with influencers to hype ${product}—growth is soaring!`,
-        `💡 Bundle ${product} with ${topPerformers[0]?.product} for a 25% sales boost!`,
+        `💡 Bundle ${product} with ${topPerformers[0]?.product || 'top seller'} for a 25% sales boost!`,
       ],
       moderateGrowth: (product: string, quantity: number) => [
         `🌟 Stock ${quantity} ${product} units! Kick off a 10% promo to keep momentum!`,
@@ -298,12 +298,12 @@ export default function SalesForecasting() {
       ],
       stable: (product: string, quantity: number) => [
         `⚖️ Stock ${quantity / 2} ${product} units! Monitor trends—consider a loyalty discount!`,
-        `🔧 Test a bundle with ${product} and ${topPerformers[1]?.product} to stir sales!`,
+        `🔧 Test a bundle with ${product} and ${topPerformers[1]?.product || 'top seller'} to stir sales!`,
         `📊 Analyze ${product} feedback—adjust pricing if needed!`,
       ],
       declining: (product: string, quantity: number) => [
         `🔥 Stock ${quantity / 3} ${product} units! Clear with a 15% discount now!`,
-        `💰 Cross-sell ${product} with ${topPerformers[0]?.product} to recover sales!`,
+        `💰 Cross-sell ${product} with ${topPerformers[0]?.product || 'top seller'} to recover sales!`,
         `⏰ Restock ${product} only if demand spikes—focus on top sellers!`,
       ],
     };
@@ -319,11 +319,19 @@ export default function SalesForecasting() {
       const growthTrend = topPerformers.find(tp => tp.product === targetProduct)?.growthRate || 0;
       const prevQuantities = predictions.filter(p => p.product === targetProduct && new Date(p.date) < new Date(date)).map(p => p.quantity);
       const isSpike = prevQuantities.length > 1 && dailyQuantity > prevQuantities.reduce((a, b) => a + b, 0) / prevQuantities.length * 1.5;
-      const actionSet = growthTrend > 10 && isSpike ? actionEngine.highGrowth
-        : growthTrend > 0 ? actionEngine.moderateGrowth
-        : growthTrend === 0 ? actionEngine.stable
-        : actionEngine.declining;
-      const action = actionSet[targetProduct][Math.floor(Math.random() * actionSet.length)].replace('[product]', targetProduct).replace('[quantity]', dailyQuantity.toString());
+
+      let actionSet;
+      if (growthTrend > 10 && isSpike) {
+        actionSet = actionEngine.highGrowth;
+      } else if (growthTrend > 0) {
+        actionSet = actionEngine.moderateGrowth;
+      } else if (growthTrend === 0) {
+        actionSet = actionEngine.stable;
+      } else {
+        actionSet = actionEngine.declining;
+      }
+
+      const action = actionSet(targetProduct, dailyQuantity)[Math.floor(Math.random() * actionSet(targetProduct, dailyQuantity).length)];
       plan.push(`${range} ${i + 1} (${date}): ${action}`);
     }
 
@@ -351,12 +359,12 @@ export default function SalesForecasting() {
       if (isSeasonal) insights.push(`🌴 ${product} shows seasonal vibes! Align with holidays for a 20% sales spike!`);
       if (lowStockRisk) insights.push(`⚠️ ${product} at risk of stockout! Order ${Math.max(...productPreds.map(p => p.quantity)) * 1.5} units now!`);
       if (growthRate > 10) insights.push(`🚀 ${product} is a growth beast! Invest in PPC ads for a 3x ROI!`);
-      if (growthRate < 0) insights.push(`🔧 ${product} dipping! Bundle with ${topPerformers[0]?.product} or offer a loyalty discount!`);
+      if (growthRate < 0) insights.push(`🔧 ${product} dipping! Bundle with ${topPerformers[0]?.product || 'top seller'} or offer a loyalty discount!`);
       if (productPreds.length > 2) {
         const trend = productPreds.map(p => p.sales).reduce((a, b, i, arr) => i > 0 ? a + (b - arr[i - 1]) : a, 0) / (productPreds.length - 1);
         insights.push(`📈 ${product} trend: ${trend > 0 ? 'Upward!' : 'Downward!'} Adjust stock by ${trend > 0 ? '+' : ''}${Math.abs(trend).toFixed(0)} units/day!`);
       }
-      insights.push(`💡 Cross-sell ${product} with ${topPerformers[1]?.product || 'a top seller'} for a 15% uplift!`);
+      insights.push(`💡 Cross-sell ${product} with ${topPerformers[1]?.product || 'top seller'} for a 15% uplift!`);
       if (productPreds.some(p => p.cost)) insights.push(`💰 ${product} ROI: Target ${avgSales / (productPreds[0]?.cost || 1) * 100}% margin with smart pricing!`);
     });
 
@@ -584,7 +592,7 @@ export default function SalesForecasting() {
                   <p className="text-gray-300 text-sm md:text-base">Growth: {performer.growthRate.toFixed(1)}%</p>
                   <div className="mt-2 text-xs text-gray-400">Hover for ROI hint!</div>
                   <span className="tooltip hidden group-hover:block absolute bg-gray-800 p-2 rounded-md text-white text-xs mt-2">
-                    Est. ROI: {(performer.totalSales / (forecastResult.predictions.find(p => p.product === performer.product)?.cost || 1) * 100).toFixed(1)}%
+                    Est. ROI: ${(performer.totalSales / (forecastResult.predictions.find(p => p.product === performer.product)?.cost || 1) * 100).toFixed(1)}%
                   </span>
                 </div>
               ))}
