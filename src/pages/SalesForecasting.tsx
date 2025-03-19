@@ -17,7 +17,6 @@ import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  BarElement,
   LineElement,
   PointElement,
   Title,
@@ -26,20 +25,17 @@ import {
   ChartData,
   ChartOptions,
 } from 'chart.js';
-import { Line } from 'react-chartjs-2';
-import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { Line } from 'react-chartjs-2'; // Using Line chart with stacked config for area effect
 
-// Register Chart.js components and plugins
+// Register Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  BarElement,
   LineElement,
   PointElement,
   Title,
   Tooltip,
-  Legend,
-  ChartDataLabels
+  Legend
 );
 
 interface Sale {
@@ -57,6 +53,8 @@ interface ForecastResult {
   method: string;
   predictions: { date: string; product: string; sales: number; quantity: number }[];
   insights: string[];
+  topPerformers: { product: string; totalSales: number; growthRate: number }[];
+  actionPlan: string[];
 }
 
 const FORECAST_OPTIONS = [
@@ -188,7 +186,7 @@ export default function SalesForecasting() {
             row.date && 
             row.product && 
             !isNaN(row.sales) && 
-            row.sales >= 0 && // Allow zero sales
+            row.sales >= 0 && 
             !isNaN(row.quantity)
           );
 
@@ -235,6 +233,8 @@ export default function SalesForecasting() {
     const products = [...new Set(data.map(d => d.product))];
     let predictions: { date: string; product: string; sales: number; quantity: number }[] = [];
     let insights: string[] = [];
+    let topPerformers: { product: string; totalSales: number; growthRate: number }[] = [];
+    let actionPlan: string[] = [];
 
     const getTrend = (productData: Sale[]) => {
       const n = productData.length;
@@ -248,7 +248,7 @@ export default function SalesForecasting() {
       const yMean = y.reduce((a, b) => a + b, 0) / n;
       const numerator = x.reduce((sum, xi, i) => sum + (xi - xMean) * (y[i] - yMean), 0);
       const denominator = x.reduce((sum, xi) => sum + (xi - xMean) ** 2, 0);
-      const slope = denominator === 0 ? 0 : numerator / denominator; // Avoid division by zero
+      const slope = denominator === 0 ? 0 : numerator / denominator;
       const intercept = yMean - slope * xMean;
       return { slope, intercept };
     };
@@ -271,11 +271,22 @@ export default function SalesForecasting() {
           }))
         );
 
+        topPerformers = products.map(product => {
+          const productPredictions = predictions.filter(p => p.product === product);
+          const totalSales = productPredictions.reduce((sum, p) => sum + p.sales, 0);
+          const growthRate = trends.find(t => t.product === product)!.slope / trends.find(t => t.product === product)!.intercept * 100 || 0;
+          return { product, totalSales, growthRate };
+        }).sort((a, b) => b.totalSales - a.totalSales).slice(0, 3);
+
+        actionPlan = forecastDates.map((date, i) => {
+          const totalSales = predictions.filter(p => p.date === date).reduce((sum, p) => sum + p.sales, 0);
+          return `${range} ${i + 1}: Stock ${Math.round(totalSales / 50)} units, consider a 5% off promo if sales trend up.`;
+        }).slice(0, Math.min(forecastSteps, 5));
+
         insights = [
           `Forecasted $${predictions.reduce((sum, p) => sum + p.sales, 0).toFixed(2)} over ${duration} ${range}(s).`,
           '**Stock Smart**: Adjust inventory based on trend growth.',
           '**Promo Timing**: Boost ads where sales rise fastest.',
-          '**Monitor**: Watch for dips below 5% growth to pivot.',
         ];
         break;
       }
@@ -300,11 +311,23 @@ export default function SalesForecasting() {
           });
         });
 
+        topPerformers = products.map(product => {
+          const productPredictions = predictions.filter(p => p.product === product);
+          const totalSales = productPredictions.reduce((sum, p) => sum + p.sales, 0);
+          const growthRate = 20; // Fixed seasonal boost
+          return { product, totalSales, growthRate };
+        }).sort((a, b) => b.totalSales - a.totalSales).slice(0, 3);
+
+        actionPlan = forecastDates.map((date, i) => {
+          const month = new Date(date).getMonth();
+          const totalSales = predictions.filter(p => p.date === date).reduce((sum, p) => sum + p.sales, 0);
+          return `${range} ${i + 1} (Month ${month + 1}): Stock ${Math.round(totalSales / 50)} units, prep for seasonal spike.`;
+        }).slice(0, Math.min(forecastSteps, 5));
+
         insights = [
           `Seasonal forecast: $${predictions.reduce((sum, p) => sum + p.sales, 0).toFixed(2)} over ${duration} ${range}(s).`,
           '**Prep Peaks**: Stock 20% more for high seasons.',
           '**Campaigns**: Time promos for seasonal upticks.',
-          '**Flex**: Adjust prices up 5-10% in peak months.',
         ];
         break;
       }
@@ -325,11 +348,22 @@ export default function SalesForecasting() {
           }))
         );
 
+        topPerformers = products.map(product => {
+          const productPredictions = predictions.filter(p => p.product === product);
+          const totalSales = productPredictions.reduce((sum, p) => sum + p.sales, 0);
+          const growthRatePercent = (Math.pow(1 + growthRate, forecastSteps * step) - 1) * 100;
+          return { product, totalSales, growthRate: growthRatePercent };
+        }).sort((a, b) => b.totalSales - a.totalSales).slice(0, 3);
+
+        actionPlan = forecastDates.map((date, i) => {
+          const totalSales = predictions.filter(p => p.date === date).reduce((sum, p) => sum + p.sales, 0);
+          return `${range} ${i + 1}: Stock ${Math.round(totalSales / 50)} units, boost ad spend by 10%.`;
+        }).slice(0, Math.min(forecastSteps, 5));
+
         insights = [
           `Aggressive forecast: $${predictions.reduce((sum, p) => sum + p.sales, 0).toFixed(2)} over ${duration} ${range}(s).`,
           '**Scale Up**: Increase ad spend 20% to match growth.',
           '**Stock Bold**: Order 10-15% extra per step.',
-          '**Risk Check**: Cut back if growth slows below 5%.',
         ];
         break;
       }
@@ -355,17 +389,28 @@ export default function SalesForecasting() {
           }))
         );
 
+        topPerformers = trends.map(({ product }) => {
+          const productPredictions = predictions.filter(p => p.product === product);
+          const totalSales = productPredictions.reduce((sum, p) => sum + p.sales, 0);
+          const growthRate = trends.find(t => t.product === product)!.slope / trends.find(t => t.product === product)!.intercept * 100 * 1.5 || 0;
+          return { product, totalSales, growthRate };
+        }).sort((a, b) => b.totalSales - a.totalSales).slice(0, 3);
+
+        actionPlan = forecastDates.map((date, i) => {
+          const totalSales = predictions.filter(p => p.date === date).reduce((sum, p) => sum + p.sales, 0);
+          return `${range} ${i + 1}: Stock ${Math.round(totalSales / 50)} units of top products, run a bundle promo.`;
+        }).slice(0, Math.min(forecastSteps, 5));
+
         insights = [
           `Top products forecast $${predictions.reduce((sum, p) => sum + p.sales, 0).toFixed(2)} over ${duration} ${range}(s).`,
           '**Push Stars**: Double ad spend on top performers.',
           '**Bundle**: Offer 10% off combos of these items.',
-          '**Trim**: Drop bottom 20% to focus resources.',
         ];
         break;
       }
     }
 
-    return { method, predictions, insights };
+    return { method, predictions, insights, topPerformers, actionPlan };
   };
 
   const handleSignOut = async () => {
@@ -386,14 +431,10 @@ export default function SalesForecasting() {
         .filter(p => p.product === product)
         .slice(0, range === 'daily' ? 30 : range === 'weekly' ? 12 : 6)
         .map(p => p.sales),
-      borderColor: `hsl(${Math.random() * 360}, 70%, 50%)`,
-      backgroundColor: `hsla(${Math.random() * 360}, 70%, 50%, 0.4)`,
-      fill: true,
+      borderColor: `hsl(${products.indexOf(product) * 60}, 70%, 50%)`,
+      backgroundColor: `hsla(${products.indexOf(product) * 60}, 70%, 50%, 0.4)`,
+      fill: 'stack', // Stacked area effect
       tension: 0.4,
-      pointRadius: 6,
-      pointBackgroundColor: '#FBBF24',
-      pointBorderColor: '#F59E0B',
-      pointHoverRadius: 8,
     })),
   } : { labels: [], datasets: [] };
 
@@ -403,11 +444,10 @@ export default function SalesForecasting() {
     plugins: {
       legend: { position: 'top', labels: { color: '#D1D5DB', font: { size: 14, weight: 'bold' } } },
       title: { display: true, text: `Sales Forecast (${selectedMethod ? FORECAST_OPTIONS.find(o => o.id === selectedMethod)?.title : ''})`, color: '#FBBF24', font: { size: 20, weight: 'bold' } },
-      tooltip: { backgroundColor: 'rgba(0, 0, 0, 0.8)', titleColor: '#FBBF24', bodyColor: '#D1D5DB', callbacks: { label: (context) => `${context.dataset.label}: $${context.parsed.y.toFixed(2)}` } },
-      datalabels: { display: false },
+      tooltip: { mode: 'index', intersect: false, backgroundColor: 'rgba(0, 0, 0, 0.8)', titleColor: '#FBBF24', bodyColor: '#D1D5DB', callbacks: { label: (context) => `${context.dataset.label}: $${context.parsed.y.toFixed(2)}` } },
     },
     scales: {
-      y: { beginAtZero: true, ticks: { color: '#D1D5DB', callback: (value) => `$${value}` }, grid: { color: 'rgba(209, 213, 219, 0.1)' }, title: { display: true, text: 'Forecasted Sales ($)', color: '#FBBF24' } },
+      y: { stacked: true, beginAtZero: true, ticks: { color: '#D1D5DB', callback: (value) => `$${value}` }, grid: { color: 'rgba(209, 213, 219, 0.1)' }, title: { display: true, text: 'Forecasted Sales ($)', color: '#FBBF24' } },
       x: { ticks: { color: '#D1D5DB' }, grid: { color: 'rgba(209, 213, 219, 0.1)' }, title: { display: true, text: range === 'daily' ? 'Date' : range === 'weekly' ? 'Week' : 'Month', color: '#FBBF24' } },
     },
   };
@@ -602,8 +642,9 @@ export default function SalesForecasting() {
 
           {/* Forecast Results */}
           {forecastResult && (
-            <div>
-              <div className="bg-gray-700 p-6 rounded-lg mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Stacked Area Chart */}
+              <div className="lg:col-span-2 bg-gray-700 p-6 rounded-lg">
                 <h3 className="text-2xl font-semibold text-gray-200 mb-4">Your Sales Forecast</h3>
                 {chartData.labels.length > 0 && chartData.datasets.length > 0 ? (
                   <div className="h-96">
@@ -612,24 +653,60 @@ export default function SalesForecasting() {
                 ) : (
                   <p className="text-gray-400 text-center">No forecast data available to display.</p>
                 )}
-                <div className="mt-6 flex justify-between items-center">
-                  <h4 className="text-lg font-semibold text-gray-200">Actionable Insights</h4>
+                <div className="mt-6 flex justify-end">
                   <button onClick={downloadForecastCSV} className="px-4 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 flex items-center text-sm shadow-lg hover:shadow-xl transition-all duration-300">
                     <Download className="h-4 w-4 mr-1" /> Download Forecast
                   </button>
                 </div>
-                <ul className="list-disc list-inside text-gray-300 text-sm mt-4 space-y-2">
-                  {forecastResult.insights.map((insight, i) => (
-                    <li key={i}>{insight}</li>
-                  ))}
-                </ul>
               </div>
+
+              {/* Top Performers Snapshot & Action Plan */}
+              <div className="lg:col-span-1 space-y-6">
+                {/* Top Performers */}
+                <div className="bg-gray-700 p-6 rounded-lg">
+                  <h4 className="text-lg font-semibold text-gray-200 mb-4">Top Performers</h4>
+                  {forecastResult.topPerformers.length > 0 ? (
+                    <ul className="space-y-4">
+                      {forecastResult.topPerformers.map((performer, i) => (
+                        <li key={i} className="text-gray-300">
+                          <span className="font-bold text-yellow-300">{performer.product}</span><br />
+                          Total Sales: ${performer.totalSales.toFixed(2)}<br />
+                          Growth: {performer.growthRate.toFixed(1)}%
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-400">No top performers identified.</p>
+                  )}
+                </div>
+
+                {/* Action Plan */}
+                <div className="bg-gray-700 p-6 rounded-lg">
+                  <h4 className="text-lg font-semibold text-gray-200 mb-4">Action Plan</h4>
+                  <ul className="list-disc list-inside text-gray-300 text-sm space-y-2">
+                    {forecastResult.actionPlan.map((action, i) => (
+                      <li key={i}>{action}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Insights */}
+                <div className="bg-gray-700 p-6 rounded-lg">
+                  <h4 className="text-lg font-semibold text-gray-200 mb-4">Insights</h4>
+                  <ul className="list-disc list-inside text-gray-300 text-sm space-y-2">
+                    {forecastResult.insights.map((insight, i) => (
+                      <li key={i}>{insight}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
               <button
                 onClick={() => {
                   setForecastResult(null);
                   setError(null);
                 }}
-                className="w-full max-w-md mx-auto px-6 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-500 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center text-sm"
+                className="lg:col-span-3 w-full max-w-md mx-auto px-6 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-500 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center text-sm"
               >
                 Try Another Forecast
               </button>
