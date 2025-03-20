@@ -412,7 +412,6 @@ export default function SalesForecasting() {
     if (selectedProduct) {
       productsForAction = [selectedProduct];
     } else {
-      // Start with top performers and supplement with additional products if needed.
       productsForAction = topPerformers.map(tp => tp.product);
       const allProducts = Array.from(new Set(predictions.map(p => p.product)));
       for (const prod of allProducts) {
@@ -427,36 +426,108 @@ export default function SalesForecasting() {
     }
     productsForAction = productsForAction.slice(0, 5);
   
-    // Updated action templates with bold, high-impact insights.
-    const actionEngine = {
-      highGrowth: (product: string, quantity: number) => [
-        `Exploit the momentum for ${product}! Ramp up your PPC campaigns and secure exclusive influencer collaborations to capture exploding demand.`,
-        `Capitalize on the surge: create limited-edition bundles for ${product} and launch a flash sale to skyrocket conversions.`,
-        `Invest in premium placements and retargeting ads for ${product} to solidify your market leadership and maximize ROI.`,
-      ],
-      moderateGrowth: (product: string, quantity: number) => [
-        `Elevate ${product} by launching a viral social media challenge and curated email series to drive brand loyalty and boost sales.`,
-        `Enhance visibility for ${product}: optimize your product pages and run targeted ads that highlight its unique value proposition.`,
-        `Set up a dynamic discount program for ${product} that rewards repeat customers and builds lasting engagement.`,
-      ],
-      stable: (product: string, quantity: number) => [
-        `Transform steady performance into explosive growth for ${product} by A/B testing new landing pages and refining your SEO strategy.`,
-        `Turn ${product} into a customer magnet: deploy conversion rate optimization tactics and interactive product demos.`,
-        `Leverage customer insights for ${product} to craft compelling storytelling campaigns that drive organic growth.`,
-      ],
-      declining: (product: string, quantity: number) => [
-        `Revitalize ${product} by rebranding its marketing message and launching a targeted promotion to recapture lost market share.`,
-        `Pivot your strategy for ${product}: introduce fresh product features or bundle with best-sellers to create buzz.`,
-        `Initiate a turnaround campaign for ${product} with exclusive offers and personalized outreach to win back customers.`,
-      ],
-    };
+    // Define 20 unique suggestions per category.
+    const highGrowthActions = [
+      `Exploit the explosive momentum for {product} by launching a multi-channel PPC blitz and securing exclusive influencer endorsements.`,
+      `Accelerate growth for {product} with a limited-edition bundle and a high-intensity flash sale to capture market buzz.`,
+      `Double down on success: invest in premium ad placements and retargeting campaigns for {product} to maximize ROI.`,
+      `Transform {product} into a market leader by hosting exclusive webinars and product demos that drive high engagement.`,
+      `Scale up fast—allocate extra budget to social media ads and influencer collaborations for {product}.`,
+      `Capitalize on the surge by launching a loyalty program for {product} that rewards repeat purchases with exclusive perks.`,
+      `Drive conversions for {product} with personalized retargeting strategies and dynamic ad creatives.`,
+      `Supercharge {product} with a data-driven digital strategy, leveraging customer insights to refine targeting.`,
+      `Unleash a viral marketing campaign for {product} featuring user-generated content and social proof.`,
+      `Boost your market share for {product} by combining aggressive ad spend with strategic content marketing.`,
+      `Leverage cutting-edge analytics to optimize campaigns for {product} and capture every growth opportunity.`,
+      `Elevate {product} with exclusive online events and limited-time offers that energize your audience.`,
+      `Invest in high-impact video ads and interactive content to create buzz around {product}.`,
+      `Maximize ROI for {product} by integrating advanced remarketing techniques into your ad strategy.`,
+      `Harness the power of influencer partnerships to expand {product}’s reach and drive exponential growth.`,
+      `Reallocate resources to innovative digital strategies for {product} that tap into emerging trends.`,
+      `Ignite interest in {product} with a robust omni-channel campaign that blends social media and search ads.`,
+      `Capitalize on high demand by offering exclusive pre-order benefits for {product}.`,
+      `Strategically boost {product}’s visibility with performance-based ad spend and creative retargeting.`,
+      `Position {product} as a must-have by combining targeted promotions with engaging content campaigns.`
+    ];
   
-    // Track used recommendations to avoid repetition.
-    const usedActions = new Set<string>();
+    const moderateGrowthActions = [
+      `Elevate {product} by launching a viral social media challenge that sparks community engagement.`,
+      `Boost {product}’s visibility with a creative email marketing series and targeted ad campaigns.`,
+      `Refine your product pages for {product} and use A/B testing to convert casual visitors into buyers.`,
+      `Drive demand for {product} by collaborating with niche influencers and leveraging user testimonials.`,
+      `Launch a seasonal promotion for {product} that aligns with current market trends and customer interests.`,
+      `Optimize {product}’s landing pages for better SEO and conversion rate, drawing in more organic traffic.`,
+      `Implement a referral program for {product} that rewards customers for bringing in new buyers.`,
+      `Strengthen {product}’s brand by curating engaging content that highlights its unique value proposition.`,
+      `Invest in retargeting campaigns for {product} to re-engage potential customers who showed interest.`,
+      `Deploy interactive content such as polls or quizzes around {product} to boost engagement and awareness.`,
+      `Experiment with dynamic pricing for {product} to optimize sales during peak periods.`,
+      `Enhance customer support and follow-up for {product} to improve satisfaction and drive repeat sales.`,
+      `Leverage influencer takeovers to refresh {product}’s image and reach new audiences.`,
+      `Introduce limited-time offers for {product} to stimulate urgency and boost conversions.`,
+      `Combine targeted social ads with organic content for {product} to create a cohesive brand story.`,
+      `Use data insights to fine-tune your marketing channels for {product} and maximize efficiency.`,
+      `Host online live events to demonstrate {product}’s benefits and answer customer questions in real time.`,
+      `Create engaging video content that showcases {product} in action, building excitement and trust.`,
+      `Offer bundled deals for {product} alongside complementary items to increase average order value.`,
+      `Revamp {product}’s digital presence with fresh, innovative creative assets and a targeted campaign.`
+    ];
   
-    // Generate one high-impact recommendation per selected product.
+    const stableActions = [
+      `Transform {product}’s steady performance into breakthrough growth by optimizing your landing pages for conversion.`,
+      `Enhance {product}’s customer journey with A/B testing and iterative design improvements that capture more leads.`,
+      `Leverage deep-dive analytics to identify new opportunities for {product} and refine your digital strategy.`,
+      `Experiment with interactive product demos for {product} that turn interest into measurable sales.`,
+      `Strengthen {product}’s online presence with targeted SEO strategies and optimized content marketing.`,
+      `Use customer feedback to iterate on {product}’s presentation, ensuring that every detail drives conversion.`,
+      `Invest in subtle, high-quality ad creatives for {product} that build trust and encourage sustained interest.`,
+      `Focus on retention strategies for {product} by introducing loyalty rewards and personalized offers.`,
+      `Develop a content calendar for {product} that positions it as a market staple and builds organic reach.`,
+      `Enhance user experience around {product} by streamlining your checkout process and improving page load times.`,
+      `Tap into market research to uncover untapped niches for {product} and tailor your marketing accordingly.`,
+      `Launch periodic promotions for {product} that maintain customer interest without oversaturating the market.`,
+      `Introduce customer testimonial videos for {product} to build credibility and drive steady sales.`,
+      `Optimize your ad spend for {product} by balancing between awareness campaigns and direct-response initiatives.`,
+      `Refine targeting for {product} with lookalike audiences and data segmentation to improve campaign performance.`,
+      `Deploy chatbots and live support on {product}’s pages to guide users toward conversion.`,
+      `Create a series of how-to guides or tutorials for {product} that empower customers and drive engagement.`,
+      `Integrate social proof and user reviews more prominently for {product} to boost confidence and sales.`,
+      `Refresh {product}’s visual branding periodically to maintain relevance and appeal in a competitive market.`,
+      `Utilize remarketing campaigns for {product} to re-engage visitors and drive them back to your site.`
+    ];
+  
+    const decliningActions = [
+      `{product} needs a turnaround! Consider a complete rebrand with a bold new messaging strategy to win back customers.`,
+      `Revitalize {product} by launching an aggressive promotion—think flash sales and limited-time offers to spark interest.`,
+      `Reassess your marketing channels for {product} and pivot to innovative platforms that may offer better traction.`,
+      `Implement a customer feedback loop for {product} to identify and fix pain points, then relaunch with improved features.`,
+      `Inject new life into {product} by bundling it with best-sellers and offering exclusive cross-promotions.`,
+      `Shift your strategy for {product} by reallocating budget towards emerging digital channels and creative campaigns.`,
+      `Develop a targeted outreach program for {product} aimed at reactivating dormant customers with personalized offers.`,
+      `Reignite interest in {product} by collaborating with niche influencers who can authentically endorse its benefits.`,
+      `Revamp {product}’s online presence with a modern design overhaul and an emphasis on storytelling.`,
+      `Launch a targeted remarketing campaign for {product} to recapture the attention of previous visitors.`,
+      `Focus on a limited-time re-launch event for {product} that creates buzz and resets customer perceptions.`,
+      `Test innovative pricing strategies for {product} to make it more competitive and appealing in the market.`,
+      `Offer a trial or sample campaign for {product} to lower the barrier to entry and attract new customers.`,
+      `Integrate customer testimonials and success stories for {product} to rebuild trust and stimulate sales.`,
+      `Rethink {product}’s value proposition and reposition it to better match current market demands.`,
+      `Launch a comprehensive digital audit for {product} to identify underperforming areas and address them head-on.`,
+      `Create urgency around {product} with a countdown-driven promotion that emphasizes scarcity and exclusivity.`,
+      `Consider partnerships or collaborations that can bring fresh energy and exposure to {product}.`,
+      `Implement a loyalty reactivation program for {product} that rewards past customers for coming back.`,
+      `Explore innovative content strategies for {product} that shift focus from price to the unique value it offers.`
+    ];
+  
+    // Track used suggestion indices per category.
+    const usedHigh = new Set<number>();
+    const usedModerate = new Set<number>();
+    const usedStable = new Set<number>();
+    const usedDeclining = new Set<number>();
+  
+    // Generate one recommendation per selected product.
     for (const product of productsForAction) {
-      // Get forecasts for the product sorted by date.
+      // Get forecasts for the product sorted chronologically.
       const productForecasts = predictions
         .filter(p => p.product === product)
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -464,27 +535,51 @@ export default function SalesForecasting() {
         plan.push(`${product}: No forecast data available for action planning!`);
         continue;
       }
-      // Use the latest forecast for current state.
+      // Use the latest forecast as the current state.
       const currentForecast = productForecasts[productForecasts.length - 1];
-      // Determine growth rate from topPerformers if available.
+      // Determine growth rate for the product from topPerformers if available.
       const tp = topPerformers.find(tp => tp.product === product);
       const growthRate = tp ? tp.growthRate : 0;
   
-      let actionSet;
-      if (growthRate > 10) actionSet = actionEngine.highGrowth;
-      else if (growthRate > 0) actionSet = actionEngine.moderateGrowth;
-      else if (growthRate === 0) actionSet = actionEngine.stable;
-      else actionSet = actionEngine.declining;
+      let candidateList: string[] = [];
+      let usedSet: Set<number>;
   
-      const candidateActions = actionSet(product, currentForecast.quantity);
-      const availableActions = candidateActions.filter(act => !usedActions.has(act));
-      const selectedAction = availableActions.length > 0 ? availableActions[0] : candidateActions[0];
-      usedActions.add(selectedAction);
+      if (growthRate > 10) {
+        candidateList = highGrowthActions;
+        usedSet = usedHigh;
+      } else if (growthRate > 0) {
+        candidateList = moderateGrowthActions;
+        usedSet = usedModerate;
+      } else if (growthRate === 0) {
+        candidateList = stableActions;
+        usedSet = usedStable;
+      } else {
+        candidateList = decliningActions;
+        usedSet = usedDeclining;
+      }
   
-      plan.push(`${product}: ${selectedAction}`);
+      // Select the most relevant suggestion that hasn't been used for similar performance.
+      let selectedIndex: number | null = null;
+      for (let i = 0; i < candidateList.length; i++) {
+        if (!usedSet.has(i)) {
+          selectedIndex = i;
+          break;
+        }
+      }
+      // If all suggestions are used, pick a random index.
+      if (selectedIndex === null) {
+        selectedIndex = Math.floor(Math.random() * candidateList.length);
+      }
+      usedSet.add(selectedIndex);
+      // Replace placeholder {product} with the actual product name and {quantity} with the forecast quantity.
+      const suggestion = candidateList[selectedIndex]
+        .replace(/{product}/g, product)
+        .replace(/{quantity}/g, currentForecast.quantity.toString());
+  
+      plan.push(`${product}: ${suggestion}`);
     }
     return plan;
-  };  
+  };    
 
   const generateInsights = (predictions: { date: string; product: string; sales: number; quantity: number; cost?: number; sku?: string }[], forecastDates: string[], range: string, topPerformers: { product: string; totalSales: number; growthRate: number }[]) => {
     const insights: string[] = [];
