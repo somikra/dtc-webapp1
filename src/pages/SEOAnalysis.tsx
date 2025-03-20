@@ -5,6 +5,8 @@ import {
   Search, Loader2, LogOut, BarChart2, TrendingUp, PieChart, DollarSign, Mail,
   AlertTriangle, TrendingDown, Star, ArrowRight, Download,
 } from 'lucide-react';
+import axios from 'axios';
+import * as cheerio from 'cheerio';
 
 interface SEOData {
   url: string;
@@ -42,12 +44,12 @@ export default function SEOAnalysis() {
       console.log('Invalid URL:', seoData.url);
       return;
     }
-  
+
     setLoading(true);
     setError(null);
     setResult(null);
     console.log('Starting SEO analysis for:', seoData.url);
-  
+
     try {
       const response = await analyzeSEO(seoData.url);
       console.log('Analysis complete:', response);
@@ -55,7 +57,7 @@ export default function SEOAnalysis() {
     } catch (err) {
       console.error('SEO Analysis Error:', err);
       setError(`Failed to analyze SEO: ${err.message || 'Unknown error'}. Please check the URL and try again.`);
-      setResult(null); // Ensure result is null on error
+      setResult(null);
     } finally {
       setLoading(false);
       console.log('Analysis finished, loading set to false');
@@ -107,82 +109,117 @@ export default function SEOAnalysis() {
   };
 
   const analyzeSEO = async (url: string): Promise<SEOResult> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const issues: SEOIssue[] = [];
-        const overallScore = Math.floor(Math.random() * 41) + 60; // 60-100
-        const pageLoadTime = (Math.random() * 3 + 1).toFixed(1); // 1-4s
-        const keywordDensity = Math.random() * 5 + 1; // 1-6
-        const backlinks = Math.floor(Math.random() * 50); // 0-50
-        const mobileScore = Math.random() > 0.3 ? 'Good' : 'Poor';
-  
-        if (parseFloat(pageLoadTime) > 2.5) {
-          issues.push({
-            type: 'Page Load Speed',
-            severity: 'High',
-            description: `Load time of ${pageLoadTime}s exceeds optimal threshold.`,
-            recommendation: 'Optimize images, minify CSS/JS, and leverage browser caching to reduce load time below 2s.',
-          });
-        }
-        if (keywordDensity < 2 || keywordDensity > 4) {
-          issues.push({
-            type: 'Keyword Density',
-            severity: 'Medium',
-            description: `Keyword density (${keywordDensity.toFixed(1)}%) is outside optimal range (2-4%).`,
-            recommendation: 'Adjust content to target 2-4% density for primary DTC keywords like "buy online" or "shop now".',
-          });
-        }
-        if (backlinks < 10) {
-          issues.push({
-            type: 'Backlinks',
-            severity: 'High',
-            description: `Only ${backlinks} backlinks detected—too low for competitive ranking.`,
-            recommendation: 'Launch a guest posting campaign and partner with DTC blogs to boost backlinks by 50% in 30 days.',
-          });
-        }
-        if (mobileScore === 'Poor') {
-          issues.push({
-            type: 'Mobile Optimization',
-            severity: 'Critical',
-            description: 'Mobile experience is subpar, risking 60%+ of DTC traffic.',
-            recommendation: 'Implement responsive design and test on multiple devices—aim for Google’s Mobile-Friendly certification.',
-          });
-        }
-  
-        const topKeywords = [
-          { keyword: 'DTC online store', density: keywordDensity, competition: 0.7 },
-          { keyword: 'shop direct', density: keywordDensity * 0.8, competition: 0.5 }, // Keep as number
-          { keyword: 'buy now', density: keywordDensity * 0.6, competition: 0.9 }, // Keep as number
-        ];
-  
-        const insights = [
-          `Overall SEO Score: <Star className="inline h-4 w-4 text-yellow-400" /> ${overallScore}/100—${overallScore > 80 ? 'Solid foundation!' : 'Room to grow—focus on critical fixes!'}`,
-          `Page Load: <Clock className="inline h-4 w-4 text-red-400" /> ${pageLoadTime}s—${parseFloat(pageLoadTime) > 2 ? 'Speed up for a 20% conversion boost!' : 'Great job—keep it snappy!'}`,
-          `Backlinks: <TrendingUp className="inline h-4 w-4 text-green-400" /> ${backlinks} detected—${backlinks < 20 ? 'Build 10+ more for a ranking surge!' : 'Strong link profile—leverage it!'}`,
-          `Mobile: <AlertTriangle className="inline h-4 w-4 text-${mobileScore === 'Poor' ? 'red' : 'green'}-500" /> ${mobileScore}—${mobileScore === 'Poor' ? 'Fix now or lose 60% of DTC buyers!' : 'Mobile-ready—optimize further for UX!'}`,
-          `Keywords: <Search className="inline h-4 w-4 text-blue-400" /> Top performer "${topKeywords[0].keyword}" at ${topKeywords[0].density.toFixed(1)}%—${topKeywords[0].density < 2 ? 'Increase density!' : 'Perfect balance—push PPC ads!'}`,
-        ];
-  
-        const actionPlan = [
-          overallScore < 80 ? 'Boost your SEO score above 80: Prioritize critical fixes like mobile optimization and page speed within 2 weeks.' : 'Maintain your edge: Refine keywords and build 5+ high-quality backlinks this month.',
-          `Optimize "${topKeywords[0].keyword}": Update meta titles and descriptions across 5 key pages—aim for a 15% traffic lift.`,
-          backlinks < 20 ? 'Launch a backlink blitz: Secure 3 guest posts on DTC blogs in 14 days to double your links.' : 'Strengthen authority: Pitch to 2 high-DA sites for featured mentions.',
-          parseFloat(pageLoadTime) > 2 ? `Cut load time to under 2s: Compress images and enable CDN—expect a 10% sales bump.` : 'Polish load speed: Test caching tweaks for an extra 5% edge.',
-          mobileScore === 'Poor' ? 'Go mobile-first: Redesign for responsiveness in 7 days—60% of DTC traffic depends on it!' : 'Enhance mobile UX: Add sticky CTAs for a 10% conversion boost.',
-        ];
-  
-        resolve({
-          url,
-          overallScore,
-          issues,
-          insights,
-          actionPlan,
-          topKeywords,
-        });
-      }, 2000);
-    });
-  };
+    const proxyUrl = 'https://cors-anywhere.herokuapp.com/'; // CORS proxy
+    const targetUrl = url.startsWith('http') ? url : `https://${url}`;
 
+    try {
+      // Fetch webpage content
+      const response = await axios.get(`${proxyUrl}${targetUrl}`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }, // Some proxies require this
+      });
+      const html = response.data;
+
+      // Parse HTML with cheerio
+      const $ = cheerio.load(html);
+      const textContent = $('body').text().toLowerCase().replace(/[^\w\s]/g, ''); // Extract all body text, clean it
+      const words = textContent.split(/\s+/).filter(word => word.length > 3); // Words longer than 3 chars
+
+      // Calculate word frequency
+      const wordFreq: { [key: string]: number } = {};
+      words.forEach(word => {
+        wordFreq[word] = (wordFreq[word] || 0) + 1;
+      });
+
+      // Get top keywords by frequency
+      const totalWords = words.length;
+      const topKeywordsRaw = Object.entries(wordFreq)
+        .sort((a, b) => b[1] - a[1]) // Sort by frequency descending
+        .slice(0, 3) // Take top 3
+        .map(([keyword, count]) => ({
+          keyword,
+          density: (count / totalWords) * 100, // Density as percentage
+          competition: Math.min(0.3 + Math.random() * 0.7, 1), // Simulated competition (0.3-1)
+        }));
+
+      // Fallback if no keywords found (e.g., empty page)
+      const topKeywords = topKeywordsRaw.length >= 3 ? topKeywordsRaw : [
+        { keyword: 'online', density: 2.5, competition: 0.7 },
+        { keyword: 'shop', density: 2.0, competition: 0.6 },
+        { keyword: 'buy', density: 1.8, competition: 0.8 },
+      ];
+
+      // Simulated SEO metrics
+      const overallScore = Math.floor(Math.random() * 41) + 60; // 60-100
+      const pageLoadTime = (Math.random() * 3 + 1).toFixed(1); // 1-4s
+      const backlinks = Math.floor(Math.random() * 50); // 0-50
+      const mobileScore = Math.random() > 0.3 ? 'Good' : 'Poor';
+
+      const issues: SEOIssue[] = [];
+      if (parseFloat(pageLoadTime) > 2.5) {
+        issues.push({
+          type: 'Page Load Speed',
+          severity: 'High',
+          description: `Load time of ${pageLoadTime}s exceeds optimal threshold.`,
+          recommendation: 'Optimize images, minify CSS/JS, and leverage browser caching to reduce load time below 2s.',
+        });
+      }
+      if (topKeywords[0].density < 2 || topKeywords[0].density > 4) {
+        issues.push({
+          type: 'Keyword Density',
+          severity: 'Medium',
+          description: `Keyword density (${topKeywords[0].density.toFixed(1)}%) for "${topKeywords[0].keyword}" is outside optimal range (2-4%).`,
+          recommendation: `Adjust content to target 2-4% density for "${topKeywords[0].keyword}".`,
+        });
+      }
+      if (backlinks < 10) {
+        issues.push({
+          type: 'Backlinks',
+          severity: 'High',
+          description: `Only ${backlinks} backlinks detected—too low for competitive ranking.`,
+          recommendation: 'Launch a guest posting campaign and partner with DTC blogs to boost backlinks by 50% in 30 days.',
+        });
+      }
+      if (mobileScore === 'Poor') {
+        issues.push({
+          type: 'Mobile Optimization',
+          severity: 'Critical',
+          description: 'Mobile experience is subpar, risking 60%+ of DTC traffic.',
+          recommendation: 'Implement responsive design and test on multiple devices—aim for Google’s Mobile-Friendly certification.',
+        });
+      }
+
+      const insights = [
+        `Overall SEO Score: <Star className="inline h-4 w-4 text-yellow-400" /> ${overallScore}/100—${overallScore > 80 ? 'Solid foundation!' : 'Room to grow—focus on critical fixes!'}`,
+        `Page Load: <Clock className="inline h-4 w-4 text-red-400" /> ${pageLoadTime}s—${parseFloat(pageLoadTime) > 2 ? 'Speed up for a 20% conversion boost!' : 'Great job—keep it snappy!'}`,
+        `Backlinks: <TrendingUp className="inline h-4 w-4 text-green-400" /> ${backlinks} detected—${backlinks < 20 ? 'Build 10+ more for a ranking surge!' : 'Strong link profile—leverage it!'}`,
+        `Mobile: <AlertTriangle className="inline h-4 w-4 text-${mobileScore === 'Poor' ? 'red' : 'green'}-500" /> ${mobileScore}—${mobileScore === 'Poor' ? 'Fix now or lose 60% of DTC buyers!' : 'Mobile-ready—optimize further for UX!'}`,
+        `Keywords: <Search className="inline h-4 w-4 text-blue-400" /> Top performer "${topKeywords[0].keyword}" at ${topKeywords[0].density.toFixed(1)}%—${topKeywords[0].density < 2 ? 'Increase density!' : 'Perfect balance—push PPC ads!'}`,
+      ];
+
+      const actionPlan = [
+        overallScore < 80 ? 'Boost your SEO score above 80: Prioritize critical fixes like mobile optimization and page speed within 2 weeks.' : 'Maintain your edge: Refine keywords and build 5+ high-quality backlinks this month.',
+        `Optimize "${topKeywords[0].keyword}": Update meta titles and descriptions across 5 key pages—aim for a 15% traffic lift.`,
+        backlinks < 20 ? 'Launch a backlink blitz: Secure 3 guest posts on DTC blogs in 14 days to double your links.' : 'Strengthen authority: Pitch to 2 high-DA sites for featured mentions.',
+        parseFloat(pageLoadTime) > 2 ? `Cut load time to under 2s: Compress images and enable CDN—expect a 10% sales bump.` : 'Polish load speed: Test caching tweaks for an extra 5% edge.',
+        mobileScore === 'Poor' ? 'Go mobile-first: Redesign for responsiveness in 7 days—60% of DTC traffic depends on it!' : 'Enhance mobile UX: Add sticky CTAs for a 10% conversion boost.',
+      ];
+
+      return {
+        url,
+        overallScore,
+        issues,
+        insights,
+        actionPlan,
+        topKeywords,
+      };
+    } catch (err) {
+      console.error('Failed to fetch or analyze content:', err);
+      throw err; // Let handleSEOAnalysis catch this
+    }
+  };
+};
+
+  // Rest of the component (return statement, styles, etc.) remains unchanged
   return (
     <div className="bg-gray-900 min-h-screen text-white font-poppins relative overflow-hidden">
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
@@ -255,44 +292,44 @@ export default function SEOAnalysis() {
 
           {/* Input Section */}
           {!result && (
-            <div className="max-w-md mx-auto relative z-20"> {/* Increased z-index to ensure it’s above other elements */}
-            <Search className="h-16 w-16 text-yellow-300 mx-auto mb-4 animate-pulse" />
-            <h3 className="text-lg font-semibold text-gray-200 mb-2 text-center">
-              Analyze Your DTC Website
-            </h3>
-            <p className="text-gray-400 mb-6 text-center">
-              Enter your URL to unlock SEO insights that crush the competition!
-            </p>
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="https://yourdtcstore.com"
-                value={seoData.url}
-                onChange={(e) => {
-                  console.log('Input changed:', e.target.value); // Debug log
-                  setSeoData({ url: e.target.value });
-                }}
-                onClick={() => console.log('Input clicked')} // Debug log to confirm clicks
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-full text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm"
-                style={{ position: 'relative', zIndex: 30 }} // Ensure input is above other layers
-              />
-              <button
-                onClick={handleSEOAnalysis}
-                disabled={loading}
-                className="w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-yellow-400 text-white rounded-full hover:from-orange-600 hover:to-yellow-500 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center text-lg font-semibold disabled:bg-gray-500"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-6 w-6 animate-spin mr-2" /> Analyzing...
-                  </>
-                ) : (
-                  <>
-                    Crush SEO Now! <Search className="inline h-5 w-5 ml-2" />
-                  </>
-                )}
-              </button>
+            <div className="max-w-md mx-auto relative z-20">
+              <Search className="h-16 w-16 text-yellow-300 mx-auto mb-4 animate-pulse" />
+              <h3 className="text-lg font-semibold text-gray-200 mb-2 text-center">
+                Analyze Your DTC Website
+              </h3>
+              <p className="text-gray-400 mb-6 text-center">
+                Enter your URL to unlock SEO insights that crush the competition!
+              </p>
+              <div className="space-y-4">
+                <input
+                  type="text"
+                  placeholder="https://yourdtcstore.com"
+                  value={seoData.url}
+                  onChange={(e) => {
+                    console.log('Input changed:', e.target.value);
+                    setSeoData({ url: e.target.value });
+                  }}
+                  onClick={() => console.log('Input clicked')}
+                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-full text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm"
+                  style={{ position: 'relative', zIndex: 30 }}
+                />
+                <button
+                  onClick={handleSEOAnalysis}
+                  disabled={loading}
+                  className="w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-yellow-400 text-white rounded-full hover:from-orange-600 hover:to-yellow-500 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center text-lg font-semibold disabled:bg-gray-500"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-6 w-6 animate-spin mr-2" /> Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      Crush SEO Now! <Search className="inline h-5 w-5 ml-2" />
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
-          </div>
           )}
 
           {/* Error Display */}
@@ -368,7 +405,7 @@ export default function SEOAnalysis() {
                           <Star className="text-yellow-300 mr-2 animate-pulse" />
                           <h4 className="text-lg font-bold text-white">{kw.keyword}</h4>
                         </div>
-                        <p className="text-gray-300 text-sm">Density: {kw.density.toFixed(1)}%</p>
+                        <p className="text-gray-300 text-sm">Density: {Number(kw.density).toFixed(1)}%</p>
                         <p className="text-gray-300 text-sm">Competition: {kw.competition.toFixed(2)}</p>
                       </div>
                     ))}
@@ -428,7 +465,6 @@ export default function SEOAnalysis() {
   );
 }
 
-// Add custom CSS (consistent with SalesForecasting)
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
   .font-poppins { font-family: 'Poppins', sans-serif; }
