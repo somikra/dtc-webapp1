@@ -282,12 +282,11 @@ export default function SalesForecasting() {
           return forecastDates.map(date => {
             const dayOfWeek = new Date(date).getDay();
             const seasonalFactor = getSeasonalFactor(date);
-            const baseUnits = avgUnitsPerDay * dayFactors[dayOfWeek] * seasonalFactor;
             return {
               date,
               product,
               sales: avgSalesPerDay * dayFactors[dayOfWeek] * seasonalFactor * periodDays,
-              quantity: Math.round(baseUnits * periodDays),
+              quantity: Math.round(avgUnitsPerDay * dayFactors[dayOfWeek] * seasonalFactor * periodDays),
               cost: avgCost,
               sku,
             };
@@ -324,13 +323,13 @@ export default function SalesForecasting() {
           return forecastDates.map((date, i) => {
             const dayOfWeek = new Date(date).getDay();
             const seasonalFactor = getSeasonalFactor(date);
-            const growthFactor = 1 + (i * 0.01); // 1% daily growth, capped at reasonable increase
-            const baseUnits = avgUnitsPerDay * dayFactors[dayOfWeek] * seasonalFactor * growthFactor;
+            // Compound growth: applying a 1% daily growth rate compounded over (i+1)*periodDays days
+            const growthFactor = Math.pow(1.01, (i + 1) * periodDays);
             return {
               date,
               product,
               sales: avgSalesPerDay * dayFactors[dayOfWeek] * seasonalFactor * growthFactor * periodDays,
-              quantity: Math.round(baseUnits * periodDays),
+              quantity: Math.round(avgUnitsPerDay * dayFactors[dayOfWeek] * seasonalFactor * growthFactor * periodDays),
               cost: avgCost,
               sku,
             };
@@ -349,17 +348,15 @@ export default function SalesForecasting() {
         predictions = products.flatMap(product => {
           const productData = data.filter(d => d.product === product);
           const { avgUnitsPerDay, avgSalesPerDay, avgCost, sku, dayFactors } = getProductStats(productData);
-          const isTop = topProducts.includes(product);
+          const multiplier = topProducts.includes(product) ? 1.2 : 0.9; // Boost top products, reduce others
           return forecastDates.map(date => {
             const dayOfWeek = new Date(date).getDay();
             const seasonalFactor = getSeasonalFactor(date);
-            const multiplier = isTop ? 1.2 : 0.9; // Boost top products, slightly reduce others
-            const baseUnits = avgUnitsPerDay * dayFactors[dayOfWeek] * seasonalFactor * multiplier;
             return {
               date,
               product,
               sales: avgSalesPerDay * dayFactors[dayOfWeek] * seasonalFactor * multiplier * periodDays,
-              quantity: Math.round(baseUnits * periodDays),
+              quantity: Math.round(avgUnitsPerDay * dayFactors[dayOfWeek] * seasonalFactor * multiplier * periodDays),
               cost: avgCost,
               sku,
             };
@@ -384,11 +381,12 @@ export default function SalesForecasting() {
     }).sort((a, b) => b.totalSales - a.totalSales).slice(0, 3);
     console.log('Top performers:', topPerformers);
   
-    const actionPlan = generateActionPlan(predictions, forecastDates, range, topPerformers, null); // Assuming selectedProduct not used here
+    const actionPlan = generateActionPlan(predictions, forecastDates, range, topPerformers, null);
     const insights = generateInsights(predictions, forecastDates, range, topPerformers);
   
     return { method, totalForecast, topPerformers, predictions, actionPlan, insights };
   };
+  
 
   const generateActionPlan = (predictions: { date: string; product: string; sales: number; quantity: number; cost?: number; sku?: string }[], forecastDates: string[], range: string, topPerformers: { product: string; totalSales: number; growthRate: number }[], selectedProduct: string | null) => {
     const plan: string[] = [];
