@@ -412,9 +412,8 @@ export default function SalesForecasting() {
     if (selectedProduct) {
       productsForAction = [selectedProduct];
     } else {
-      // Start with top performers
+      // Start with top performers and supplement with additional products if needed.
       productsForAction = topPerformers.map(tp => tp.product);
-      // Supplement with additional products from all predictions if fewer than 5
       const allProducts = Array.from(new Set(predictions.map(p => p.product)));
       for (const prod of allProducts) {
         if (!productsForAction.includes(prod)) {
@@ -423,42 +422,41 @@ export default function SalesForecasting() {
         if (productsForAction.length >= 5) break;
       }
     }
-    // Ensure we have exactly 5 action plans (if less, repeat the first one to fill up)
     while (productsForAction.length < 5) {
       productsForAction.push(productsForAction[0]);
     }
     productsForAction = productsForAction.slice(0, 5);
   
-    // Updated action templates based on growth conditions with more meaningful recommendations.
+    // Updated action templates with bold, high-impact insights.
     const actionEngine = {
       highGrowth: (product: string, quantity: number) => [
-        `For ${product}, consider scaling your marketing by investing in PPC campaigns and influencer partnerships to capture the growing demand.`,
-        `Expand ${product}’s market reach by bundling it with complementary products, leveraging its high growth momentum.`,
-        `Boost inventory for ${product} and enhance customer support to sustain and accelerate this upward trend.`,
+        `Exploit the momentum for ${product}! Ramp up your PPC campaigns and secure exclusive influencer collaborations to capture exploding demand.`,
+        `Capitalize on the surge: create limited-edition bundles for ${product} and launch a flash sale to skyrocket conversions.`,
+        `Invest in premium placements and retargeting ads for ${product} to solidify your market leadership and maximize ROI.`,
       ],
       moderateGrowth: (product: string, quantity: number) => [
-        `Enhance engagement for ${product} by launching targeted social media campaigns and email promotions.`,
-        `Offer limited-time discounts or loyalty rewards on ${product} to further stimulate demand.`,
-        `Improve product listings and SEO for ${product} to drive organic traffic and conversion.`,
+        `Elevate ${product} by launching a viral social media challenge and curated email series to drive brand loyalty and boost sales.`,
+        `Enhance visibility for ${product}: optimize your product pages and run targeted ads that highlight its unique value proposition.`,
+        `Set up a dynamic discount program for ${product} that rewards repeat customers and builds lasting engagement.`,
       ],
       stable: (product: string, quantity: number) => [
-        `Maintain ${product}’s steady performance by optimizing your ad strategy and website conversion rates.`,
-        `Implement A/B testing on ${product}’s pages and pricing to identify potential improvements.`,
-        `Focus on customer feedback and satisfaction initiatives to keep ${product} sales consistent.`,
+        `Transform steady performance into explosive growth for ${product} by A/B testing new landing pages and refining your SEO strategy.`,
+        `Turn ${product} into a customer magnet: deploy conversion rate optimization tactics and interactive product demos.`,
+        `Leverage customer insights for ${product} to craft compelling storytelling campaigns that drive organic growth.`,
       ],
       declining: (product: string, quantity: number) => [
-        `Reevaluate your marketing for ${product} – try targeted promotions or bundled offers to reinvigorate sales.`,
-        `Consider reducing inventory for ${product} and reallocating resources toward higher-performing items.`,
-        `Analyze customer reviews for ${product} to identify issues and implement product improvements.`,
+        `Revitalize ${product} by rebranding its marketing message and launching a targeted promotion to recapture lost market share.`,
+        `Pivot your strategy for ${product}: introduce fresh product features or bundle with best-sellers to create buzz.`,
+        `Initiate a turnaround campaign for ${product} with exclusive offers and personalized outreach to win back customers.`,
       ],
     };
   
-    // To ensure non-repetition across products, we track used recommendations.
+    // Track used recommendations to avoid repetition.
     const usedActions = new Set<string>();
   
-    // For each selected product, use its last forecasted data and overall growth rate for recommendation.
+    // Generate one high-impact recommendation per selected product.
     for (const product of productsForAction) {
-      // Gather forecasts for this product sorted chronologically.
+      // Get forecasts for the product sorted by date.
       const productForecasts = predictions
         .filter(p => p.product === product)
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -466,9 +464,9 @@ export default function SalesForecasting() {
         plan.push(`${product}: No forecast data available for action planning!`);
         continue;
       }
-      // Use the last forecast entry as the current state.
+      // Use the latest forecast for current state.
       const currentForecast = productForecasts[productForecasts.length - 1];
-      // Determine growth rate for the product from topPerformers if available.
+      // Determine growth rate from topPerformers if available.
       const tp = topPerformers.find(tp => tp.product === product);
       const growthRate = tp ? tp.growthRate : 0;
   
@@ -479,16 +477,14 @@ export default function SalesForecasting() {
       else actionSet = actionEngine.declining;
   
       const candidateActions = actionSet(product, currentForecast.quantity);
-      // Filter out actions that were already used.
       const availableActions = candidateActions.filter(act => !usedActions.has(act));
-      // Choose the first available action; if all are used, fall back to the first candidate.
       const selectedAction = availableActions.length > 0 ? availableActions[0] : candidateActions[0];
       usedActions.add(selectedAction);
   
       plan.push(`${product}: ${selectedAction}`);
     }
     return plan;
-  };    
+  };  
 
   const generateInsights = (predictions: { date: string; product: string; sales: number; quantity: number; cost?: number; sku?: string }[], forecastDates: string[], range: string, topPerformers: { product: string; totalSales: number; growthRate: number }[]) => {
     const insights: string[] = [];
