@@ -107,17 +107,15 @@ export default function SEOAnalysis() {
   };
 
   const analyzeSEO = async (url: string): Promise<SEOResult> => {
-    // Simulate a detailed SEO analysis (replace with real API calls in production)
     return new Promise((resolve) => {
       setTimeout(() => {
         const issues: SEOIssue[] = [];
-        const overallScore = Math.floor(Math.random() * 41) + 60; // 60-100 for demo
+        const overallScore = Math.floor(Math.random() * 41) + 60; // 60-100
         const pageLoadTime = (Math.random() * 3 + 1).toFixed(1); // 1-4s
-        const keywordDensity = Math.random() * 5 + 1; // 1-6%
+        const keywordDensity = Math.random() * 5 + 1; // 1-6
         const backlinks = Math.floor(Math.random() * 50); // 0-50
         const mobileScore = Math.random() > 0.3 ? 'Good' : 'Poor';
-
-        // Simulated SEO issues
+  
         if (parseFloat(pageLoadTime) > 2.5) {
           issues.push({
             type: 'Page Load Speed',
@@ -150,13 +148,13 @@ export default function SEOAnalysis() {
             recommendation: 'Implement responsive design and test on multiple devices—aim for Google’s Mobile-Friendly certification.',
           });
         }
-
+  
         const topKeywords = [
           { keyword: 'DTC online store', density: keywordDensity, competition: 0.7 },
-          { keyword: 'shop direct', density: (keywordDensity * 0.8).toFixed(1), competition: 0.5 },
-          { keyword: 'buy now', density: (keywordDensity * 0.6).toFixed(1), competition: 0.9 },
+          { keyword: 'shop direct', density: keywordDensity * 0.8, competition: 0.5 }, // Keep as number
+          { keyword: 'buy now', density: keywordDensity * 0.6, competition: 0.9 }, // Keep as number
         ];
-
+  
         const insights = [
           `Overall SEO Score: <Star className="inline h-4 w-4 text-yellow-400" /> ${overallScore}/100—${overallScore > 80 ? 'Solid foundation!' : 'Room to grow—focus on critical fixes!'}`,
           `Page Load: <Clock className="inline h-4 w-4 text-red-400" /> ${pageLoadTime}s—${parseFloat(pageLoadTime) > 2 ? 'Speed up for a 20% conversion boost!' : 'Great job—keep it snappy!'}`,
@@ -164,7 +162,7 @@ export default function SEOAnalysis() {
           `Mobile: <AlertTriangle className="inline h-4 w-4 text-${mobileScore === 'Poor' ? 'red' : 'green'}-500" /> ${mobileScore}—${mobileScore === 'Poor' ? 'Fix now or lose 60% of DTC buyers!' : 'Mobile-ready—optimize further for UX!'}`,
           `Keywords: <Search className="inline h-4 w-4 text-blue-400" /> Top performer "${topKeywords[0].keyword}" at ${topKeywords[0].density.toFixed(1)}%—${topKeywords[0].density < 2 ? 'Increase density!' : 'Perfect balance—push PPC ads!'}`,
         ];
-
+  
         const actionPlan = [
           overallScore < 80 ? 'Boost your SEO score above 80: Prioritize critical fixes like mobile optimization and page speed within 2 weeks.' : 'Maintain your edge: Refine keywords and build 5+ high-quality backlinks this month.',
           `Optimize "${topKeywords[0].keyword}": Update meta titles and descriptions across 5 key pages—aim for a 15% traffic lift.`,
@@ -172,7 +170,7 @@ export default function SEOAnalysis() {
           parseFloat(pageLoadTime) > 2 ? `Cut load time to under 2s: Compress images and enable CDN—expect a 10% sales bump.` : 'Polish load speed: Test caching tweaks for an extra 5% edge.',
           mobileScore === 'Poor' ? 'Go mobile-first: Redesign for responsiveness in 7 days—60% of DTC traffic depends on it!' : 'Enhance mobile UX: Add sticky CTAs for a 10% conversion boost.',
         ];
-
+  
         resolve({
           url,
           overallScore,
@@ -181,7 +179,7 @@ export default function SEOAnalysis() {
           actionPlan,
           topKeywords,
         });
-      }, 2000); // Simulate network delay
+      }, 2000);
     });
   };
 
