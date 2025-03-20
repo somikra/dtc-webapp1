@@ -828,11 +828,11 @@ export default function SalesForecasting() {
                         <p className="text-sm text-gray-400">Over {duration} {range}(s)</p>
                       </div>
                       <button
-                        onClick={downloadForecastCSV}
-                        className="px-8 py-3 bg-gradient-to-r from-orange-500 to-purple-600 text-white rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-110 transition-all duration-300 flex items-center text-lg font-bold animate-gradient-x border-2 border-yellow-300 hover:border-yellow-400"
-                      >
-                        <Download className="h-6 w-6 mr-2 animate-bounce" /> Get Forecast
-                      </button>
+  onClick={downloadForecastCSV}
+  className="px-8 py-3 bg-gradient-to-r from-orange-500 to-purple-600 text-white rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-110 transition-all duration-300 flex items-center text-xl font-bold animate-gradient-x border-2 border-yellow-300 hover:border-yellow-400 whitespace-nowrap"
+>
+  <Download className="h-6 w-6 mr-2 animate-bounce" /> Get Forecast
+</button>
                     </div>
                   </div>
                 </section>
