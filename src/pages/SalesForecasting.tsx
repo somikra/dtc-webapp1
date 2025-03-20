@@ -429,30 +429,31 @@ export default function SalesForecasting() {
     }
     productsForAction = productsForAction.slice(0, 5);
   
-    // Define action templates based on growth conditions.
+    // Updated action templates based on growth conditions with more meaningful recommendations.
     const actionEngine = {
       highGrowth: (product: string, quantity: number) => [
-        `Launch a <Megaphone /> 20% ad campaign for ${product} with forecasted stock of ${quantity} units!`,
-        `Create a <Package /> bundle with ${product} and a top seller—stock ${Math.round(quantity * 1.2)} units!`,
-        `Partner with influencers for ${product}—prepare ${quantity} units for restock!`,
+        `For ${product}, consider scaling your marketing by investing in PPC campaigns and influencer partnerships to capture the growing demand.`,
+        `Expand ${product}’s market reach by bundling it with complementary products, leveraging its high growth momentum.`,
+        `Boost inventory for ${product} and enhance customer support to sustain and accelerate this upward trend.`,
       ],
       moderateGrowth: (product: string, quantity: number) => [
-        `Initiate a <ShoppingCart /> 10% discount on ${product} with ${quantity} units forecasted!`,
-        `Send a <MessageCircle /> targeted email for ${product}—stock ${Math.round(quantity)} units!`,
-        `Promote ${product} on social media—forecasted stock: ${quantity} units!`,
+        `Enhance engagement for ${product} by launching targeted social media campaigns and email promotions.`,
+        `Offer limited-time discounts or loyalty rewards on ${product} to further stimulate demand.`,
+        `Improve product listings and SEO for ${product} to drive organic traffic and conversion.`,
       ],
       stable: (product: string, quantity: number) => [
-        `Monitor <Clock /> trends for ${product}—stock ${Math.round(quantity / 2)} units!`,
-        `Test a <Package /> bundle with ${product} and another top seller—stock ${Math.round(quantity * 0.75)} units!`,
-        `Analyze <RefreshCw /> feedback for ${product}—prepare ${Math.round(quantity / 2)} units!`,
+        `Maintain ${product}’s steady performance by optimizing your ad strategy and website conversion rates.`,
+        `Implement A/B testing on ${product}’s pages and pricing to identify potential improvements.`,
+        `Focus on customer feedback and satisfaction initiatives to keep ${product} sales consistent.`,
       ],
       declining: (product: string, quantity: number) => [
-        `Clear <TrendingDown /> excess ${product} with a 15% discount—stock ${Math.round(quantity / 3)} units!`,
-        `Cross-sell <Package /> ${product} with a top seller—forecast ${Math.round(quantity / 2)} units!`,
-        `Restock <RefreshCw /> ${product} only if demand rises—current forecast: ${Math.round(quantity / 4)} units!`,
+        `Reevaluate your marketing for ${product} – try targeted promotions or bundled offers to reinvigorate sales.`,
+        `Consider reducing inventory for ${product} and reallocating resources toward higher-performing items.`,
+        `Analyze customer reviews for ${product} to identify issues and implement product improvements.`,
       ],
     };
   
+    // To ensure non-repetition across products, we track used recommendations.
     const usedActions = new Set<string>();
   
     // For each selected product, use its last forecasted data and overall growth rate for recommendation.
@@ -478,15 +479,16 @@ export default function SalesForecasting() {
       else actionSet = actionEngine.declining;
   
       const candidateActions = actionSet(product, currentForecast.quantity);
+      // Filter out actions that were already used.
       const availableActions = candidateActions.filter(act => !usedActions.has(act));
-      // Choose the first available action for consistency; if all are used, use the first candidate.
+      // Choose the first available action; if all are used, fall back to the first candidate.
       const selectedAction = availableActions.length > 0 ? availableActions[0] : candidateActions[0];
       usedActions.add(selectedAction);
   
       plan.push(`${product}: ${selectedAction}`);
     }
     return plan;
-  };  
+  };    
 
   const generateInsights = (predictions: { date: string; product: string; sales: number; quantity: number; cost?: number; sku?: string }[], forecastDates: string[], range: string, topPerformers: { product: string; totalSales: number; growthRate: number }[]) => {
     const insights: string[] = [];
