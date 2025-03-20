@@ -399,13 +399,22 @@ export default function SalesForecasting() {
   
   
 
-  const generateActionPlan = (predictions: { date: string; product: string; sales: number; quantity: number; cost?: number; sku?: string }[], forecastDates: string[], range: string, topPerformers: { product: string; totalSales: number; growthRate: number }[], selectedProduct: string | null) => {
+  const generateActionPlan = (
+    predictions: { date: string; product: string; sales: number; quantity: number; cost?: number; sku?: string }[],
+    forecastDates: string[],
+    range: string,
+    topPerformers: { product: string; totalSales: number; growthRate: number }[],
+    selectedProduct: string | null
+  ) => {
     const plan: string[] = [];
     const steps = Math.min(5, forecastDates.length);
+    const usedActions = new Set<string>();
+  
+    // Define action templates based on growth conditions.
     const actionEngine = {
       highGrowth: (product: string, quantity: number) => [
         `Launch a <Megaphone /> 20% ad campaign for ${product} with forecasted stock of ${quantity} units!`,
-        `Create a <Package /> bundle with ${product} and ${topPerformers[0]?.product || 'top seller'}—stock ${Math.round(quantity * 1.2)} units!`,
+        `Create a <Package /> bundle with ${product} and a top seller—stock ${Math.round(quantity * 1.2)} units!`,
         `Partner with influencers for ${product}—prepare ${quantity} units for restock!`,
       ],
       moderateGrowth: (product: string, quantity: number) => [
@@ -415,41 +424,65 @@ export default function SalesForecasting() {
       ],
       stable: (product: string, quantity: number) => [
         `Monitor <Clock /> trends for ${product}—stock ${Math.round(quantity / 2)} units!`,
-        `Test a <Package /> bundle with ${product} and ${topPerformers[1]?.product || 'top seller'}—stock ${Math.round(quantity * 0.75)} units!`,
+        `Test a <Package /> bundle with ${product} and a top seller—stock ${Math.round(quantity * 0.75)} units!`,
         `Analyze <RefreshCw /> feedback for ${product}—prepare ${Math.round(quantity / 2)} units!`,
       ],
       declining: (product: string, quantity: number) => [
         `Clear <TrendingDown /> excess ${product} with a 15% discount—stock ${Math.round(quantity / 3)} units!`,
-        `Cross-sell <Package /> ${product} with ${topPerformers[0]?.product || 'top seller'}—forecast ${Math.round(quantity / 2)} units!`,
+        `Cross-sell <Package /> ${product} with a top seller—forecast ${Math.round(quantity / 2)} units!`,
         `Restock <RefreshCw /> ${product} only if demand rises—current forecast: ${Math.round(quantity / 4)} units!`,
       ],
     };
-
+  
     for (let i = 0; i < steps; i++) {
       const date = forecastDates[i];
-      const productData = selectedProduct
-        ? predictions.filter(p => p.product === selectedProduct && p.date === date)
-        : predictions.filter(p => p.date === date);
-      if (productData.length === 0) {
+  
+      // Determine the target product (if a product is selected, use that; otherwise, use the top performer)
+      const targetProduct = selectedProduct || topPerformers[0]?.product || predictions[0].product;
+  
+      // Retrieve forecasts for the target product sorted by date.
+      const productForecasts = predictions
+        .filter(p => p.product === targetProduct)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      const currentForecast = productForecasts[i];
+  
+      if (!currentForecast) {
         plan.push(`${range} ${i + 1} (${date}): No data for action planning!`);
         continue;
       }
-
-      const targetProduct = selectedProduct || topPerformers[0]?.product || productData[0].product;
-      const dailyQuantity = productData.find(p => p.product === targetProduct)?.quantity || 0;
-      const growthRate = topPerformers.find(tp => tp.product === targetProduct)?.growthRate || 0;
-
+      const currentQuantity = currentForecast.quantity;
+  
+      // Compute growth rate based on previous forecast (if available).
+      let growthRate = 0;
+      if (i > 0) {
+        const prevForecast = productForecasts[i - 1];
+        if (prevForecast.quantity > 0) {
+          growthRate = ((currentQuantity - prevForecast.quantity) / prevForecast.quantity) * 100;
+        }
+      }
+  
+      // Determine the action set based on the computed growth rate.
       let actionSet;
       if (growthRate > 10) actionSet = actionEngine.highGrowth;
       else if (growthRate > 0) actionSet = actionEngine.moderateGrowth;
       else if (growthRate === 0) actionSet = actionEngine.stable;
       else actionSet = actionEngine.declining;
-
-      const action = actionSet(targetProduct, dailyQuantity)[Math.floor(Math.random() * 3)];
-      plan.push(`${range} ${i + 1} (${date}): ${action}`);
+  
+      // From the chosen action set, pick an action that hasn't been used yet.
+      const availableActions = actionSet(targetProduct, currentQuantity).filter(act => !usedActions.has(act));
+      let selectedAction;
+      if (availableActions.length > 0) {
+        selectedAction = availableActions[Math.floor(Math.random() * availableActions.length)];
+      } else {
+        // If all actions are used, allow a repeat.
+        selectedAction = actionSet(targetProduct, currentQuantity)[Math.floor(Math.random() * 3)];
+      }
+      usedActions.add(selectedAction);
+  
+      plan.push(`${range} ${i + 1} (${date}): ${selectedAction}`);
     }
     return plan;
-  };
+  };  
 
   const generateInsights = (predictions: { date: string; product: string; sales: number; quantity: number; cost?: number; sku?: string }[], forecastDates: string[], range: string, topPerformers: { product: string; totalSales: number; growthRate: number }[]) => {
     const insights: string[] = [];
