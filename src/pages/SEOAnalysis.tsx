@@ -39,20 +39,26 @@ export default function SEOAnalysis() {
     if (!seoData.url || !isValidUrl(seoData.url)) {
       setError('Please enter a valid website URL (e.g., https://example.com).');
       setResult(null);
+      console.log('Invalid URL:', seoData.url);
       return;
     }
-
+  
     setLoading(true);
     setError(null);
     setResult(null);
-
+    console.log('Starting SEO analysis for:', seoData.url);
+  
     try {
       const response = await analyzeSEO(seoData.url);
+      console.log('Analysis complete:', response);
       setResult(response);
     } catch (err) {
-      setError('Failed to analyze SEO. Please check the URL and try again.');
+      console.error('SEO Analysis Error:', err);
+      setError(`Failed to analyze SEO: ${err.message || 'Unknown error'}. Please check the URL and try again.`);
+      setResult(null); // Ensure result is null on error
     } finally {
       setLoading(false);
+      console.log('Analysis finished, loading set to false');
     }
   };
 
@@ -251,7 +257,7 @@ export default function SEOAnalysis() {
 
           {/* Input Section */}
           {!result && (
-            <div className="max-w-md mx-auto">
+            <div className="max-w-md mx-auto relative z-20"> {/* Increased z-index to ensure it’s above other elements */}
             <Search className="h-16 w-16 text-yellow-300 mx-auto mb-4 animate-pulse" />
             <h3 className="text-lg font-semibold text-gray-200 mb-2 text-center">
               Analyze Your DTC Website
@@ -263,9 +269,14 @@ export default function SEOAnalysis() {
               <input
                 type="text"
                 placeholder="https://yourdtcstore.com"
-                value={seoData.url} // Controlled by state
-                onChange={handleInputChange} // Updates state on input
+                value={seoData.url}
+                onChange={(e) => {
+                  console.log('Input changed:', e.target.value); // Debug log
+                  setSeoData({ url: e.target.value });
+                }}
+                onClick={() => console.log('Input clicked')} // Debug log to confirm clicks
                 className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-full text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm"
+                style={{ position: 'relative', zIndex: 30 }} // Ensure input is above other layers
               />
               <button
                 onClick={handleSEOAnalysis}
