@@ -635,7 +635,7 @@ export default function SalesForecasting() {
           <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/diagmonds.png')]"></div>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <h1 className="text-5xl md:text-6xl font-bold text-center tracking-tight text-white drop-shadow-lg">
-              AI-Powered <span className="text-yellow-300">Sales Forecasting</span> <TrendingUp className="inline h-8 w-8 animate-pulse" />
+              Intelligent <span className="text-yellow-300">Sales Forecasting</span> <TrendingUp className="inline h-8 w-8 animate-pulse" />
             </h1>
             <p className="mt-6 text-xl text-gray-100 text-center max-w-3xl mx-auto">
               Unleash your sales potential with cutting-edge insights!
