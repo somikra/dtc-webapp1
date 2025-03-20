@@ -817,22 +817,22 @@ export default function SalesForecasting() {
               <div className="space-y-12">
                 {/* Forecast Section */}
                 <section>
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-2xl font-bold text-yellow-300 flex items-center">
-                      Forecast Overview <TrendingUp className="inline h-6 w-6 ml-2 animate-pulse" />
-                    </h3>
-                    <button
-                      onClick={downloadForecastCSV}
-                      className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center text-sm font-semibold hover:from-green-600 hover:to-emerald-700"
-                    >
-                      <Download className="h-5 w-5 mr-2 animate-bounce" /> Download Forecast
-                    </button>
-                  </div>
+                  <h3 className="text-2xl font-bold text-yellow-300 mb-6 flex items-center">
+                    Forecast Overview <TrendingUp className="inline h-6 w-6 ml-2 animate-pulse" />
+                  </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div className="bg-gray-700 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 bg-gradient-to-br from-gray-800 to-gray-900 card-tilt">
-                      <h4 className="text-lg font-bold text-white mb-2">Total Forecast</h4>
-                      <p className="text-2xl font-bold text-white drop-shadow-md">${forecastResult.totalForecast.toFixed(2)}</p>
-                      <p className="text-sm text-gray-400">Over {duration} {range}(s)</p>
+                    <div className="flex items-center space-x-6">
+                      <div className="bg-gray-700 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 bg-gradient-to-br from-gray-800 to-gray-900 card-tilt flex-1">
+                        <h4 className="text-lg font-bold text-white mb-2">Total Forecast</h4>
+                        <p className="text-2xl font-bold text-white drop-shadow-md">${forecastResult.totalForecast.toFixed(2)}</p>
+                        <p className="text-sm text-gray-400">Over {duration} {range}(s)</p>
+                      </div>
+                      <button
+                        onClick={downloadForecastCSV}
+                        className="px-8 py-3 bg-gradient-to-r from-orange-500 to-purple-600 text-white rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-110 transition-all duration-300 flex items-center text-lg font-bold animate-gradient-x border-2 border-yellow-300 hover:border-yellow-400"
+                      >
+                        <Download className="h-6 w-6 mr-2 animate-bounce" /> Get Forecast
+                      </button>
                     </div>
                   </div>
                 </section>
