@@ -252,38 +252,38 @@ export default function SEOAnalysis() {
           {/* Input Section */}
           {!result && (
             <div className="max-w-md mx-auto">
-              <Search className="h-16 w-16 text-yellow-300 mx-auto mb-4 animate-pulse" />
-              <h3 className="text-lg font-semibold text-gray-200 mb-2 text-center">
-                Analyze Your DTC Website
-              </h3>
-              <p className="text-gray-400 mb-6 text-center">
-                Enter your URL to unlock SEO insights that crush the competition!
-              </p>
-              <div className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="https://yourdtcstore.com"
-                  value={seoData.url}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-full text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm"
-                />
-                <button
-                  onClick={handleSEOAnalysis}
-                  disabled={loading}
-                  className="w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-yellow-400 text-white rounded-full hover:from-orange-600 hover:to-yellow-500 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center text-lg font-semibold disabled:bg-gray-500"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="h-6 w-6 animate-spin mr-2" /> Analyzing...
-                    </>
-                  ) : (
-                    <>
-                      Crush SEO Now! <Search className="inline h-5 w-5 ml-2" />
-                    </>
-                  )}
-                </button>
-              </div>
+            <Search className="h-16 w-16 text-yellow-300 mx-auto mb-4 animate-pulse" />
+            <h3 className="text-lg font-semibold text-gray-200 mb-2 text-center">
+              Analyze Your DTC Website
+            </h3>
+            <p className="text-gray-400 mb-6 text-center">
+              Enter your URL to unlock SEO insights that crush the competition!
+            </p>
+            <div className="space-y-4">
+              <input
+                type="text"
+                placeholder="https://yourdtcstore.com"
+                value={seoData.url} // Controlled by state
+                onChange={handleInputChange} // Updates state on input
+                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-full text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm"
+              />
+              <button
+                onClick={handleSEOAnalysis}
+                disabled={loading}
+                className="w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-yellow-400 text-white rounded-full hover:from-orange-600 hover:to-yellow-500 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center text-lg font-semibold disabled:bg-gray-500"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-6 w-6 animate-spin mr-2" /> Analyzing...
+                  </>
+                ) : (
+                  <>
+                    Crush SEO Now! <Search className="inline h-5 w-5 ml-2" />
+                  </>
+                )}
+              </button>
             </div>
+          </div>
           )}
 
           {/* Error Display */}
