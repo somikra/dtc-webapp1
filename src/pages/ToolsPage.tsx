@@ -113,7 +113,7 @@ export default function ToolsPage() {
   return (
     <div className="bg-gray-900 min-h-screen text-white">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-purple-600 py-20 relative overflow-hidden">
+      <div className="bg-gradient-to-r from-orange-500 to-purple-600 py-20 animate-gradient-x">
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/diagmonds.png')]"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <h1 className="text-5xl md:text-6xl font-extrabold text-center tracking-tight">
