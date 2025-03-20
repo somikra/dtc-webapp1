@@ -17,7 +17,7 @@ export default function LandingPage() {
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-orange-500 via-red-500 to-purple-600 text-white py-20 animate-gradient-x">
+      <section className="relative bg-gradient-to-r from-orange-500 via-red-500 to-purple-600 text-white py-28 overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/diagmonds.png')]"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
