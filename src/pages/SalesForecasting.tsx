@@ -407,8 +407,27 @@ export default function SalesForecasting() {
     selectedProduct: string | null
   ) => {
     const plan: string[] = [];
-    const steps = Math.min(5, forecastDates.length);
-    const usedActions = new Set<string>();
+    // If a product is selected, use only that one; otherwise, pick up to 5 distinct products.
+    let productsForAction: string[] = [];
+    if (selectedProduct) {
+      productsForAction = [selectedProduct];
+    } else {
+      // Start with top performers
+      productsForAction = topPerformers.map(tp => tp.product);
+      // Supplement with additional products from all predictions if fewer than 5
+      const allProducts = Array.from(new Set(predictions.map(p => p.product)));
+      for (const prod of allProducts) {
+        if (!productsForAction.includes(prod)) {
+          productsForAction.push(prod);
+        }
+        if (productsForAction.length >= 5) break;
+      }
+    }
+    // Ensure we have exactly 5 action plans (if less, repeat the first one to fill up)
+    while (productsForAction.length < 5) {
+      productsForAction.push(productsForAction[0]);
+    }
+    productsForAction = productsForAction.slice(0, 5);
   
     // Define action templates based on growth conditions.
     const actionEngine = {
@@ -424,7 +443,7 @@ export default function SalesForecasting() {
       ],
       stable: (product: string, quantity: number) => [
         `Monitor <Clock /> trends for ${product}—stock ${Math.round(quantity / 2)} units!`,
-        `Test a <Package /> bundle with ${product} and a top seller—stock ${Math.round(quantity * 0.75)} units!`,
+        `Test a <Package /> bundle with ${product} and another top seller—stock ${Math.round(quantity * 0.75)} units!`,
         `Analyze <RefreshCw /> feedback for ${product}—prepare ${Math.round(quantity / 2)} units!`,
       ],
       declining: (product: string, quantity: number) => [
@@ -434,52 +453,37 @@ export default function SalesForecasting() {
       ],
     };
   
-    for (let i = 0; i < steps; i++) {
-      const date = forecastDates[i];
+    const usedActions = new Set<string>();
   
-      // Determine the target product (if a product is selected, use that; otherwise, use the top performer)
-      const targetProduct = selectedProduct || topPerformers[0]?.product || predictions[0].product;
-  
-      // Retrieve forecasts for the target product sorted by date.
+    // For each selected product, use its last forecasted data and overall growth rate for recommendation.
+    for (const product of productsForAction) {
+      // Gather forecasts for this product sorted chronologically.
       const productForecasts = predictions
-        .filter(p => p.product === targetProduct)
+        .filter(p => p.product === product)
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      const currentForecast = productForecasts[i];
-  
-      if (!currentForecast) {
-        plan.push(`${range} ${i + 1} (${date}): No data for action planning!`);
+      if (productForecasts.length === 0) {
+        plan.push(`${product}: No forecast data available for action planning!`);
         continue;
       }
-      const currentQuantity = currentForecast.quantity;
+      // Use the last forecast entry as the current state.
+      const currentForecast = productForecasts[productForecasts.length - 1];
+      // Determine growth rate for the product from topPerformers if available.
+      const tp = topPerformers.find(tp => tp.product === product);
+      const growthRate = tp ? tp.growthRate : 0;
   
-      // Compute growth rate based on previous forecast (if available).
-      let growthRate = 0;
-      if (i > 0) {
-        const prevForecast = productForecasts[i - 1];
-        if (prevForecast.quantity > 0) {
-          growthRate = ((currentQuantity - prevForecast.quantity) / prevForecast.quantity) * 100;
-        }
-      }
-  
-      // Determine the action set based on the computed growth rate.
       let actionSet;
       if (growthRate > 10) actionSet = actionEngine.highGrowth;
       else if (growthRate > 0) actionSet = actionEngine.moderateGrowth;
       else if (growthRate === 0) actionSet = actionEngine.stable;
       else actionSet = actionEngine.declining;
   
-      // From the chosen action set, pick an action that hasn't been used yet.
-      const availableActions = actionSet(targetProduct, currentQuantity).filter(act => !usedActions.has(act));
-      let selectedAction;
-      if (availableActions.length > 0) {
-        selectedAction = availableActions[Math.floor(Math.random() * availableActions.length)];
-      } else {
-        // If all actions are used, allow a repeat.
-        selectedAction = actionSet(targetProduct, currentQuantity)[Math.floor(Math.random() * 3)];
-      }
+      const candidateActions = actionSet(product, currentForecast.quantity);
+      const availableActions = candidateActions.filter(act => !usedActions.has(act));
+      // Choose the first available action for consistency; if all are used, use the first candidate.
+      const selectedAction = availableActions.length > 0 ? availableActions[0] : candidateActions[0];
       usedActions.add(selectedAction);
   
-      plan.push(`${range} ${i + 1} (${date}): ${selectedAction}`);
+      plan.push(`${product}: ${selectedAction}`);
     }
     return plan;
   };  
