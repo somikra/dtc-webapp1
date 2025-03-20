@@ -245,8 +245,6 @@ export default function SalesForecasting() {
     let topPerformers: { product: string; totalSales: number; growthRate: number }[] = [];
   
     // Calculate historical daily averages and day-of-week patterns.
-    // Note: We now compute two sets of factors – one based on quantity (unitsDayFactor)
-    // and another based on sales (salesDayFactor).
     const daysInData = (new Date(sortedData[sortedData.length - 1].date) - new Date(sortedData[0].date)) / (1000 * 60 * 60 * 24) + 1;
     const getProductStats = (productData: Sale[]) => {
       const totalUnits = productData.reduce((sum, d) => sum + d.quantity, 0);
@@ -397,8 +395,6 @@ export default function SalesForecasting() {
     return { method, totalForecast, topPerformers, predictions, actionPlan, insights };
   };
   
-  
-
   const generateActionPlan = (
     predictions: { date: string; product: string; sales: number; quantity: number; cost?: number; sku?: string }[],
     forecastDates: string[],
@@ -821,7 +817,17 @@ export default function SalesForecasting() {
               <div className="space-y-12">
                 {/* Forecast Section */}
                 <section>
-                  <h3 className="text-2xl font-bold text-yellow-300 mb-6 flex items-center">Forecast Overview <TrendingUp className="inline h-6 w-6 ml-2 animate-pulse" /></h3>
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-2xl font-bold text-yellow-300 flex items-center">
+                      Forecast Overview <TrendingUp className="inline h-6 w-6 ml-2 animate-pulse" />
+                    </h3>
+                    <button
+                      onClick={downloadForecastCSV}
+                      className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center text-sm font-semibold hover:from-green-600 hover:to-emerald-700"
+                    >
+                      <Download className="h-5 w-5 mr-2 animate-bounce" /> Download Forecast
+                    </button>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div className="bg-gray-700 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 bg-gradient-to-br from-gray-800 to-gray-900 card-tilt">
                       <h4 className="text-lg font-bold text-white mb-2">Total Forecast</h4>
@@ -909,14 +915,6 @@ export default function SalesForecasting() {
                           </li>
                         ))}
                       </ul>
-                      <div className="mt-4 flex justify-end">
-                        <button
-                          onClick={downloadForecastCSV}
-                          className="px-4 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 flex items-center text-sm shadow-lg hover:shadow-xl transition-all duration-300"
-                        >
-                          <Download className="h-4 w-4 mr-1 animate-bounce" /> Download Forecast
-                        </button>
-                      </div>
                     </div>
                   </section>
                 ) : (
