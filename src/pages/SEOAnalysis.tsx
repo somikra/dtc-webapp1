@@ -109,14 +109,14 @@ export default function SEOAnalysis() {
   };
 
   const analyzeSEO = async (url: string): Promise<SEOResult> => {
-    const backendUrl = 'http://localhost:3001/fetch-url'; // Matches your working backend endpoint
+    const proxyUrl = 'https://cors-anywhere.herokuapp.com/'; // Reverted to proxy fix
     const targetUrl = url.startsWith('http') ? url : `https://${url}`;
 
     let topKeywords: { keyword: string; density: number; competition: number }[];
     try {
-      console.log('Attempting to fetch via backend:', targetUrl);
-      const response = await axios.get(backendUrl, {
-        params: { url: targetUrl },
+      console.log('Attempting to fetch:', `${proxyUrl}${targetUrl}`);
+      const response = await axios.get(`${proxyUrl}${targetUrl}`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
         timeout: 10000,
       });
       console.log('Fetch successful, analyzing content...');
@@ -154,7 +154,7 @@ export default function SEOAnalysis() {
         { keyword: 'buy', density: 1.8, competition: 0.8 },
       ];
       if (err.response && err.response.status === 403) {
-        console.warn('403 Forbidden - Target website may be blocking requests');
+        console.warn('403 Forbidden - Check CORS proxy access or website restrictions');
       }
     }
 
