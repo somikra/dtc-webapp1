@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   Search, Loader2, LogOut, BarChart2, TrendingUp, PieChart, DollarSign, Mail,
-  AlertTriangle, TrendingDown, Star, ArrowRight, Download,
+  AlertTriangle, CheckCircle, Clock, Smartphone, Link, Eye, ShoppingCart, Lock, FileText,
 } from 'lucide-react';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
@@ -12,20 +12,18 @@ interface SEOData {
   url: string;
 }
 
-interface SEOIssue {
-  type: string;
-  severity: 'Critical' | 'High' | 'Medium' | 'Low';
+interface SEOInsight {
+  title: string;
+  status: 'Good' | 'Bad' | 'Warning';
   description: string;
   recommendation: string;
+  impact: string;
 }
 
 interface SEOResult {
   url: string;
   overallScore: number;
-  issues: SEOIssue[];
-  insights: string[];
-  actionPlan: string[];
-  topKeywords: { keyword: string; density: number; competition: number }[];
+  insights: SEOInsight[];
 }
 
 export default function SEOAnalysis() {
@@ -41,26 +39,21 @@ export default function SEOAnalysis() {
     if (!seoData.url || !isValidUrl(seoData.url)) {
       setError('Please enter a valid website URL (e.g., https://example.com).');
       setResult(null);
-      console.log('Invalid URL:', seoData.url);
       return;
     }
 
     setLoading(true);
     setError(null);
     setResult(null);
-    console.log('Starting SEO analysis for:', seoData.url);
 
     try {
       const response = await analyzeSEO(seoData.url);
-      console.log('Analysis complete:', response);
       setResult(response);
     } catch (err) {
-      console.error('SEO Analysis Error:', err);
-      setError(`Failed to analyze SEO: ${err.message || 'Unknown error'}. Please check the URL and try again.`);
+      setError(`Failed to analyze SEO: ${err.message || 'Unknown error'}.`);
       setResult(null);
     } finally {
       setLoading(false);
-      console.log('Analysis finished, loading set to false');
     }
   };
 
@@ -78,149 +71,122 @@ export default function SEOAnalysis() {
     setSeoData({ url: e.target.value });
   };
 
-  const downloadSEOReport = () => {
-    if (!result) return;
-    const csvData = [
-      ['SEO Analysis Report for', result.url],
-      ['Overall Score', `${result.overallScore}/100`],
-      [],
-      ['Issues'],
-      ['Type', 'Severity', 'Description', 'Recommendation'],
-      ...result.issues.map(issue => [issue.type, issue.severity, issue.description, issue.recommendation]),
-      [],
-      ['Top Keywords'],
-      ['Keyword', 'Density (%)', 'Competition (0-1)'],
-      ...result.topKeywords.map(kw => [kw.keyword, kw.density.toFixed(2), kw.competition.toFixed(2)]),
-      [],
-      ['Insights'],
-      ...result.insights.map(ins => [ins.replace(/<[^>]+>/g, '')]),
-      [],
-      ['Action Plan'],
-      ...result.actionPlan.map(action => [action]),
-    ];
-    const csvContent = csvData.map(row => row.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `seo-report-${result.url.replace(/https?:\/\//, '').replace(/\//g, '-')}-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
-
   const analyzeSEO = async (url: string): Promise<SEOResult> => {
-    const proxyUrl = 'https://cors-anywhere.herokuapp.com/'; // Reverted to proxy fix
+    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
     const targetUrl = url.startsWith('http') ? url : `https://${url}`;
 
-    let topKeywords: { keyword: string; density: number; competition: number }[];
+    let html = '';
     try {
-      console.log('Attempting to fetch:', `${proxyUrl}${targetUrl}`);
       const response = await axios.get(`${proxyUrl}${targetUrl}`, {
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
         timeout: 10000,
       });
-      console.log('Fetch successful, analyzing content...');
-      const html = response.data;
-
-      const $ = cheerio.load(html);
-      const textContent = $('body').text().toLowerCase().replace(/[^\w\s]/g, '');
-      const words = textContent.split(/\s+/).filter(word => word.length > 3);
-
-      const wordFreq: { [key: string]: number } = {};
-      words.forEach(word => {
-        wordFreq[word] = (wordFreq[word] || 0) + 1;
-      });
-
-      const totalWords = words.length;
-      const topKeywordsRaw = Object.entries(wordFreq)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 3)
-        .map(([keyword, count]) => ({
-          keyword,
-          density: (count / totalWords) * 100,
-          competition: Math.min(0.3 + Math.random() * 0.7, 1),
-        }));
-
-      topKeywords = topKeywordsRaw.length >= 3 ? topKeywordsRaw : [
-        { keyword: 'online', density: 2.5, competition: 0.7 },
-        { keyword: 'shop', density: 2.0, competition: 0.6 },
-        { keyword: 'buy', density: 1.8, competition: 0.8 },
-      ];
+      html = response.data;
     } catch (err) {
       console.error('Fetch failed:', err.response ? err.response.status : err.message);
-      topKeywords = [
-        { keyword: 'online', density: 2.5, competition: 0.7 },
-        { keyword: 'shop', density: 2.0, competition: 0.6 },
-        { keyword: 'buy', density: 1.8, competition: 0.8 },
-      ];
-      if (err.response && err.response.status === 403) {
-        console.warn('403 Forbidden - Check CORS proxy access or website restrictions');
-      }
     }
 
-    const overallScore = Math.floor(Math.random() * 41) + 60;
-    const pageLoadTime = (Math.random() * 3 + 1).toFixed(1);
-    const backlinks = Math.floor(Math.random() * 50);
-    const mobileScore = Math.random() > 0.3 ? 'Good' : 'Poor';
+    const $ = cheerio.load(html);
+    const title = $('title').text();
+    const description = $('meta[name="description"]').attr('content') || '';
+    const hasCanonical = !!$('link[rel="canonical"]').length;
+    const imageAlts = $('img[alt]').length / ($('img').length || 1);
+    const productPages = $('a[href*="/product"]').length > 0 || $('a[href*="/shop"]').length > 0;
+    const h1Count = $('h1').length;
+    const contentLength = $('p').text().split(/\s+/).filter(word => word).length;
+    const hasRobots = !!$('meta[name="robots"]').length;
+    const internalLinks = $('a[href^="/"]').length;
+    const isSecure = targetUrl.startsWith('https');
 
-    const issues: SEOIssue[] = [];
-    if (parseFloat(pageLoadTime) > 2.5) {
-      issues.push({
-        type: 'Page Load Speed',
-        severity: 'High',
-        description: `Load time of ${pageLoadTime}s exceeds optimal threshold.`,
-        recommendation: 'Optimize images, minify CSS/JS, and leverage browser caching to reduce load time below 2s.',
-      });
-    }
-    if (topKeywords[0].density < 2 || topKeywords[0].density > 4) {
-      issues.push({
-        type: 'Keyword Density',
-        severity: 'Medium',
-        description: `Keyword density (${topKeywords[0].density.toFixed(1)}%) for "${topKeywords[0].keyword}" is outside optimal range (2-4%).`,
-        recommendation: `Adjust content to target 2-4% density for "${topKeywords[0].keyword}".`,
-      });
-    }
-    if (backlinks < 10) {
-      issues.push({
-        type: 'Backlinks',
-        severity: 'High',
-        description: `Only ${backlinks} backlinks detected—too low for competitive ranking.`,
-        recommendation: 'Launch a guest posting campaign and partner with DTC blogs to boost backlinks by 50% in 30 days.',
-      });
-    }
-    if (mobileScore === 'Poor') {
-      issues.push({
-        type: 'Mobile Optimization',
-        severity: 'Critical',
-        description: 'Mobile experience is subpar, risking 60%+ of DTC traffic.',
-        recommendation: 'Implement responsive design and test on multiple devices—aim for Google’s Mobile-Friendly certification.',
-      });
-    }
+    // Calculate score based on checks (out of 100)
+    const scoreFactors = [
+      title.length > 0 && title.length <= 60 ? 10 : 0,
+      description.length > 0 && description.length <= 160 ? 10 : 0,
+      hasCanonical ? 10 : 0,
+      imageAlts >= 0.8 ? 10 : 0,
+      productPages ? 10 : 0,
+      h1Count === 1 ? 10 : 0,
+      contentLength >= 500 ? 10 : 0,
+      hasRobots ? 10 : 0,
+      internalLinks >= 5 ? 10 : 0,
+      isSecure ? 10 : 0,
+    ];
+    const overallScore = scoreFactors.reduce((sum, val) => sum + val, 0);
 
-    const insights = [
-      `Overall SEO Score: <Star className="inline h-4 w-4 text-yellow-400" /> ${overallScore}/100—${overallScore > 80 ? 'Solid foundation!' : 'Room to grow—focus on critical fixes!'}`,
-      `Page Load: <Clock className="inline h-4 w-4 text-red-400" /> ${pageLoadTime}s—${parseFloat(pageLoadTime) > 2 ? 'Speed up for a 20% conversion boost!' : 'Great job—keep it snappy!'}`,
-      `Backlinks: <TrendingUp className="inline h-4 w-4 text-green-400" /> ${backlinks} detected—${backlinks < 20 ? 'Build 10+ more for a ranking surge!' : 'Strong link profile—leverage it!'}`,
-      `Mobile: <AlertTriangle className="inline h-4 w-4 text-${mobileScore === 'Poor' ? 'red' : 'green'}-500" /> ${mobileScore}—${mobileScore === 'Poor' ? 'Fix now or lose 60% of DTC buyers!' : 'Mobile-ready—optimize further for UX!'}`,
-      `Keywords: <Search className="inline h-4 w-4 text-blue-400" /> Top performer "${topKeywords[0].keyword}" at ${topKeywords[0].density.toFixed(1)}%—${topKeywords[0].density < 2 ? 'Increase density!' : 'Perfect balance—push PPC ads!'}`,
+    const insights: SEOInsight[] = [
+      {
+        title: 'Meta Title',
+        status: title.length > 0 && title.length <= 60 ? 'Good' : 'Bad',
+        description: title.length > 0 ? `Title is ${title.length} characters.` : 'No title tag found.',
+        recommendation: title.length > 60 ? 'Shorten to 60 characters.' : title.length === 0 ? 'Add a title with key product terms.' : 'Optimize with top-selling product names.',
+        impact: 'Boosts click-through rate by 15%.',
+      },
+      {
+        title: 'Meta Description',
+        status: description.length > 0 && description.length <= 160 ? 'Good' : 'Bad',
+        description: description.length > 0 ? `Description is ${description.length} characters.` : 'No description found.',
+        recommendation: description.length > 160 ? 'Trim to 160 characters with a CTA.' : description.length === 0 ? 'Add a 150-char sales pitch.' : 'Include a strong call-to-action.',
+        impact: 'Increases clicks by 10%.',
+      },
+      {
+        title: 'Canonical Tags',
+        status: hasCanonical ? 'Good' : 'Warning',
+        description: hasCanonical ? 'Canonical tag present.' : 'No canonical tag detected.',
+        recommendation: hasCanonical ? 'Verify it points to the correct URL.' : 'Add canonical tags to prevent duplicate content issues.',
+        impact: 'Avoids 5-10% ranking loss.',
+      },
+      {
+        title: 'Image Alt Text',
+        status: imageAlts >= 0.8 ? 'Good' : 'Bad',
+        description: `${(imageAlts * 100).toFixed(0)}% of images have alt text.`,
+        recommendation: imageAlts < 0.8 ? 'Add alt text to 80%+ of images with product descriptions.' : 'Enhance with keyword-rich alt text.',
+        impact: 'Drives 25% more image search traffic.',
+      },
+      {
+        title: 'Product Page Links',
+        status: productPages ? 'Good' : 'Warning',
+        description: productPages ? 'Product/shop links found.' : 'No clear product pages detected.',
+        recommendation: productPages ? 'Ensure product URLs are SEO-friendly.' : 'Add visible links to product pages from homepage.',
+        impact: 'Powers 30% of sales traffic.',
+      },
+      {
+        title: 'H1 Heading Usage',
+        status: h1Count === 1 ? 'Good' : h1Count > 1 ? 'Warning' : 'Bad',
+        description: h1Count === 1 ? 'One H1 found—perfect!' : h1Count > 1 ? `${h1Count} H1s found.` : 'No H1 found.',
+        recommendation: h1Count > 1 ? 'Reduce to one H1 per page.' : h1Count === 0 ? 'Add one H1 with your main product focus.' : 'Keep it unique and descriptive.',
+        impact: 'Improves ranking clarity by 10%.',
+      },
+      {
+        title: 'Content Length',
+        status: contentLength >= 500 ? 'Good' : 'Warning',
+        description: `Content has ${contentLength} words.`,
+        recommendation: contentLength < 500 ? 'Add 500+ words of unique product content.' : 'Boost with customer reviews or guides.',
+        impact: 'Increases dwell time by 15%.',
+      },
+      {
+        title: 'Robots Meta Tag',
+        status: hasRobots ? 'Good' : 'Warning',
+        description: hasRobots ? 'Robots tag present.' : 'No robots tag found.',
+        recommendation: hasRobots ? 'Ensure it allows indexing.' : 'Add <meta name="robots" content="index, follow">.',
+        impact: 'Ensures 100% crawlability.',
+      },
+      {
+        title: 'Internal Linking',
+        status: internalLinks >= 5 ? 'Good' : 'Warning',
+        description: `${internalLinks} internal links detected.`,
+        recommendation: internalLinks < 5 ? 'Add 5+ links to key product pages.' : 'Link to high-margin products for sales lift.',
+        impact: 'Distributes page authority by 20%.',
+      },
+      {
+        title: 'SSL Security',
+        status: isSecure ? 'Good' : 'Bad',
+        description: isSecure ? 'Site uses HTTPS.' : 'Site lacks HTTPS.',
+        recommendation: isSecure ? 'Keep SSL certificate updated.' : 'Switch to HTTPS for trust and ranking.',
+        impact: 'Builds 10% more user trust.',
+      },
     ];
 
-    const actionPlan = [
-      overallScore < 80 ? 'Boost your SEO score above 80: Prioritize critical fixes like mobile optimization and page speed within 2 weeks.' : 'Maintain your edge: Refine keywords and build 5+ high-quality backlinks this month.',
-      `Optimize "${topKeywords[0].keyword}": Update meta titles and descriptions across 5 key pages—aim for a 15% traffic lift.`,
-      backlinks < 20 ? 'Launch a backlink blitz: Secure 3 guest posts on DTC blogs in 14 days to double your links.' : 'Strengthen authority: Pitch to 2 high-DA sites for featured mentions.',
-      parseFloat(pageLoadTime) > 2 ? `Cut load time to under 2s: Compress images and enable CDN—expect a 10% sales bump.` : 'Polish load speed: Test caching tweaks for an extra 5% edge.',
-      mobileScore === 'Poor' ? 'Go mobile-first: Redesign for responsiveness in 7 days—60% of DTC traffic depends on it!' : 'Enhance mobile UX: Add sticky CTAs for a 10% conversion boost.',
-    ];
-
-    return {
-      url,
-      overallScore,
-      issues,
-      insights,
-      actionPlan,
-      topKeywords,
-    };
+    return { url, overallScore, insights };
   };
 
   return (
@@ -229,105 +195,59 @@ export default function SEOAnalysis() {
       <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10 animate-star-twinkle"></div>
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-purple-600 py-20 relative overflow-hidden animate-gradient-x">
+      <div className="bg-gradient-to-r from-orange-500 to-purple-600 py-12 relative overflow-hidden animate-gradient-x">
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/diagmonds.png')]"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <h1 className="text-5xl md:text-6xl font-bold text-center tracking-tight text-white drop-shadow-lg">
-            Intelligent <span className="text-yellow-300">SEO Analysis</span> <Search className="inline h-8 w-8 animate-pulse" />
+          <h1 className="text-4xl md:text-5xl font-bold text-center tracking-tight text-white drop-shadow-lg">
+            SEO <span className="text-yellow-300">Power Boost</span> <Search className="inline h-8 w-8 animate-pulse" />
           </h1>
-          <p className="mt-6 text-xl text-gray-100 text-center max-w-3xl mx-auto">
-            Dominate search and flood your DTC store with buyers using next-level SEO insights!
+          <p className="mt-4 text-lg text-gray-100 text-center max-w-2xl mx-auto">
+            Skyrocket your DTC sales with pro-level SEO insights—fix what’s broken, double down on what works!
           </p>
-          <div className="mt-4 bg-gray-800 bg-opacity-80 p-4 rounded-xl shadow-lg text-center max-w-2xl mx-auto transform hover:scale-105 transition-all duration-300">
-            <p className="text-yellow-300 font-semibold text-lg">
-              Instant analysis—no fluff, pure DTC growth power!
-            </p>
-          </div>
         </div>
       </div>
 
-      {/* Navigation - Launch Pad */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-gray-800 rounded-xl shadow-lg p-6 transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="w-full">
-              <h3 className="text-lg font-bold text-yellow-300 mb-4 flex items-center">
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                Launch Pad
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                <a href="/tools-dashboard" className="group relative px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-800 text-white rounded-xl font-semibold text-sm flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-yellow-300">
-                  <BarChart2 className="w-4 h-4 mr-2" /> Sales Dashboard
-                </a>
-                <a href="/sales-forecasting" className="group relative px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-800 text-white rounded-xl font-semibold text-sm flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-yellow-300">
-                  <TrendingUp className="w-4 h-4 mr-2" /> Sales Forecasting
-                </a>
-                <a href="/seo-analysis" className="group relative px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-gray-900 rounded-xl font-semibold text-sm flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-yellow-300">
-                  <Search className="w-4 h-4 mr-2" /> SEO Analysis
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">Hot</span>
-                </a>
-                <a href="/pricing-optimizer" className="group relative px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-800 text-white rounded-xl font-semibold text-sm flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-yellow-300">
-                  <DollarSign className="w-4 h-4 mr-2" /> Pricing Optimizer
-                </a>
-                <a href="/email-campaign" className="group relative px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-800 text-white rounded-xl font-semibold text-sm flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-yellow-300">
-                  <Mail className="w-4 h-4 mr-2" /> Email Campaign
-                </a>
-              </div>
-            </div>
-            <button onClick={handleSignOut} className="px-4 py-2 bg-gradient-to-r from-orange-500 to-yellow-400 text-white rounded-xl shadow-lg hover:from-orange-600 hover:to-yellow-500 transition-all duration-300 flex items-center text-sm font-semibold transform hover:scale-105 flex-shrink-0">
-              <LogOut className="h-4 w-4 mr-2" /> Sign Out
-            </button>
+      {/* Navigation */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="bg-gray-800 rounded-xl shadow-lg p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="flex flex-wrap gap-3 justify-center">
+            <a href="/tools-dashboard" className="px-3 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition-all flex items-center text-sm"><BarChart2 className="h-4 w-4 mr-2" /> Sales Dashboard</a>
+            <a href="/sales-forecasting" className="px-3 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition-all flex items-center text-sm"><TrendingUp className="h-4 w-4 mr-2" /> Forecasting</a>
+            <a href="/seo-analysis" className="px-3 py-2 bg-yellow-400 text-gray-900 rounded-lg hover:bg-yellow-300 transition-all flex items-center text-sm font-bold"><Search className="h-4 w-4 mr-2" /> SEO Boost</a>
+            <a href="/pricing-optimizer" className="px-3 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition-all flex items-center text-sm"><DollarSign className="h-4 w-4 mr-2" /> Pricing</a>
+            <a href="/email-campaign" className="px-3 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition-all flex items-center text-sm"><Mail className="h-4 w-4 mr-2" /> Email</a>
           </div>
+          <button onClick={handleSignOut} className="px-4 py-2 bg-orange-500 rounded-lg hover:bg-orange-600 transition-all flex items-center text-sm"><LogOut className="h-4 w-4 mr-2" /> Sign Out</button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl p-8 relative overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col items-center">
+        <div className="w-full max-w-4xl bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl p-6 relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/noise.png')] opacity-5"></div>
-          <div className="flex items-center justify-between mb-6 relative z-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-white drop-shadow-md flex items-center">
-              SEO Analysis <Search className="inline h-6 w-6 text-yellow-300 ml-2 animate-pulse" />
-            </h2>
-          </div>
 
           {!result && (
-            <div className="max-w-md mx-auto relative z-20">
-              <Search className="h-16 w-16 text-yellow-300 mx-auto mb-4 animate-pulse" />
-              <h3 className="text-lg font-semibold text-gray-200 mb-2 text-center">
-                Analyze Your DTC Website
-              </h3>
-              <p className="text-gray-400 mb-6 text-center">
-                Enter your URL to unlock SEO insights that crush the competition!
-              </p>
-              <div className="space-y-4">
+            <div className="text-center relative z-10">
+              <Search className="h-12 w-12 text-yellow-300 mx-auto mb-4 animate-bounce" />
+              <h2 className="text-3xl font-bold text-white mb-2">Unlock Your SEO Potential</h2>
+              <p className="text-gray-300 mb-6">Enter your DTC store URL for 10+ actionable insights.</p>
+              <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
                 <input
                   type="text"
                   placeholder="https://yourdtcstore.com"
                   value={seoData.url}
-                  onChange={(e) => {
-                    console.log('Input changed:', e.target.value);
-                    setSeoData({ url: e.target.value });
-                  }}
-                  onClick={() => console.log('Input clicked')}
-                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-full text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm"
-                  style={{ position: 'relative', zIndex: 30 }}
+                  onChange={handleInputChange}
+                  className="flex-1 px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm shadow-md"
                 />
                 <button
                   onClick={handleSEOAnalysis}
                   disabled={loading}
-                  className="w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-yellow-400 text-white rounded-full hover:from-orange-600 hover:to-yellow-500 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center text-lg font-semibold disabled:bg-gray-500"
+                  className="px-6 py-3 bg-gradient-to-r from-orange-500 to-yellow-400 text-white rounded-lg hover:from-orange-600 hover:to-yellow-500 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all text-lg font-semibold disabled:bg-gray-500 flex items-center justify-center"
                 >
                   {loading ? (
-                    <>
-                      <Loader2 className="h-6 w-6 animate-spin mr-2" /> Analyzing...
-                    </>
+                    <><Loader2 className="h-6 w-6 animate-spin mr-2" /> Analyzing...</>
                   ) : (
-                    <>
-                      Crush SEO Now! <Search className="inline h-5 w-5 ml-2" />
-                    </>
+                    <>Boost My SEO <Search className="h-5 w-5 ml-2" /></>
                   )}
                 </button>
               </div>
@@ -335,122 +255,78 @@ export default function SEOAnalysis() {
           )}
 
           {error && (
-            <div className="bg-red-600 p-4 rounded-xl mb-6 text-white shadow-md animate-pulse">
-              <p>{error}</p>
+            <div className="bg-red-600 p-4 rounded-lg mb-6 text-white text-center shadow-md animate-pulse max-w-md mx-auto">
+              {error}
             </div>
           )}
 
           {result && (
-            <div className="space-y-12">
-              <section>
-                <h3 className="text-2xl font-bold text-yellow-300 mb-6 flex items-center">
-                  SEO Overview <PieChart className="inline h-6 w-6 ml-2 animate-pulse" />
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <div className="flex items-center space-x-6">
-                    <div className="bg-gray-700 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 bg-gradient-to-br from-gray-800 to-gray-900 card-tilt flex-1">
-                      <h4 className="text-lg font-bold text-white mb-2">Overall Score</h4>
-                      <p className="text-2xl font-bold text-white drop-shadow-md">{result.overallScore}/100</p>
-                      <p className="text-sm text-gray-400">{result.overallScore > 80 ? 'Killing it!' : 'Let’s boost this!'}</p>
+            <div className="relative z-10">
+              <div className="text-center mb-6">
+                <h2 className="text-2xl md:text-3xl font-bold text-white">SEO Insights for <span className="text-yellow-300">{result.url}</span></h2>
+                <div className="mt-4 flex justify-center items-center">
+                  <div className="relative w-28 h-28">
+                    <svg className="w-full h-full" viewBox="0 0 36 36">
+                      <path
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#444"
+                        strokeWidth="4"
+                      />
+                      <path
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831"
+                        fill="none"
+                        stroke="url(#scoreGradient)"
+                        strokeWidth="4"
+                        strokeDasharray={`${result.overallScore}, 100`}
+                        transform="rotate(-90 18 18)"
+                      />
+                      <defs>
+                        <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" style={{ stopColor: '#f97316' }} />
+                          <stop offset="100%" style={{ stopColor: '#eab308' }} />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl font-bold text-white">
+                      {result.overallScore}/100
                     </div>
-                    <button
-                      onClick={downloadSEOReport}
-                      className="px-8 py-3 bg-gradient-to-r from-orange-500 to-purple-600 text-white rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-110 transition-all duration-300 flex items-center text-xl font-bold animate-gradient-x border-2 border-yellow-300 hover:border-yellow-400 whitespace-nowrap"
-                    >
-                      <Download className="h-6 w-6 mr-2 animate-bounce" /> Get Report
-                    </button>
                   </div>
                 </div>
-              </section>
+              </div>
 
-              {result.issues.length > 0 && (
-                <section>
-                  <h3 className="text-2xl font-bold text-yellow-300 mb-6 flex items-center">
-                    SEO Issues <AlertTriangle className="inline h-6 w-6 ml-2 animate-pulse" />
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {result.issues.map((issue, index) => (
-                      <div
-                        key={index}
-                        className="bg-gray-700 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 bg-gradient-to-br from-gray-800 to-gray-900 card-tilt"
-                        data-tooltip={issue.recommendation}
-                      >
-                        <div className="flex items-center mb-2">
-                          <AlertTriangle className={`h-5 w-5 mr-2 text-${issue.severity === 'Critical' ? 'red' : issue.severity === 'High' ? 'orange' : 'yellow'}-500 animate-pulse`} />
-                          <h4 className="text-lg font-bold text-white">{issue.type}</h4>
-                        </div>
-                        <p className="text-gray-300 text-sm">Severity: {issue.severity}</p>
-                        <p className="text-gray-300 text-sm">{issue.description}</p>
-                      </div>
-                    ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {result.insights.map((insight, index) => (
+                  <div
+                    key={index}
+                    className={`p-4 rounded-lg shadow-lg transition-all hover:shadow-xl hover:-translate-y-1 ${
+                      insight.status === 'Good' ? 'bg-green-900/50 border-l-4 border-green-500' :
+                      insight.status === 'Bad' ? 'bg-red-900/50 border-l-4 border-red-500' :
+                      'bg-yellow-900/50 border-l-4 border-yellow-500'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      {insight.status === 'Good' ? (
+                        <CheckCircle className="h-5 w-5 text-green-400" />
+                      ) : insight.status === 'Bad' ? (
+                        <AlertTriangle className="h-5 w-5 text-red-400" />
+                      ) : (
+                        <AlertTriangle className="h-5 w-5 text-yellow-400" />
+                      )}
+                      <h3 className="text-lg font-semibold text-white">{insight.title}</h3>
+                    </div>
+                    <p className="text-gray-300 text-sm">{insight.description}</p>
+                    <p className="text-gray-200 text-sm mt-1"><span className="font-bold text-yellow-300">Fix:</span> {insight.recommendation}</p>
+                    <p className="text-gray-400 text-xs mt-1"><span className="font-bold">Impact:</span> {insight.impact}</p>
                   </div>
-                </section>
-              )}
-
-              {result.topKeywords.length > 0 && (
-                <section>
-                  <h3 className="text-2xl font-bold text-yellow-300 mb-6 flex items-center">
-                    Top Keywords <Star className="inline h-6 w-6 ml-2 animate-pulse" />
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {result.topKeywords.map((kw, index) => (
-                      <div
-                        key={index}
-                        className="bg-gray-700 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 bg-gradient-to-br from-gray-800 to-gray-900 card-tilt"
-                      >
-                        <div className="flex items-center mb-2">
-                          <Star className="text-yellow-300 mr-2 animate-pulse" />
-                          <h4 className="text-lg font-bold text-white">{kw.keyword}</h4>
-                        </div>
-                        <p className="text-gray-300 text-sm">Density: {Number(kw.density).toFixed(1)}%</p>
-                        <p className="text-gray-300 text-sm">Competition: {kw.competition.toFixed(2)}</p>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {result.actionPlan.length > 0 && (
-                <section>
-                  <h3 className="text-2xl font-bold text-yellow-300 mb-6 flex items-center">
-                    Action Plan <TrendingUp className="inline h-6 w-6 ml-2 animate-pulse" />
-                  </h3>
-                  <div className="bg-gray-700 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 bg-gradient-to-br from-gray-800 to-gray-900 card-tilt">
-                    <ul className="list-none text-gray-300 text-sm space-y-2">
-                      {result.actionPlan.map((action, i) => (
-                        <li key={i} className="flex items-center">
-                          <ArrowRight className="h-4 w-4 text-green-400 mr-2" />
-                          <span>{action}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </section>
-              )}
-
-              {result.insights.length > 0 && (
-                <section>
-                  <h3 className="text-2xl font-bold text-yellow-300 mb-6 flex items-center">
-                    Pro Insights <svg className="inline h-6 w-6 ml-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
-                  </h3>
-                  <div className="bg-gray-700 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 hover:shadow-3xl hover:-translate-y-2 bg-gradient-to-br from-gray-800 to-gray-900 card-tilt">
-                    <ul className="list-none text-gray-300 text-sm space-y-2">
-                      {result.insights.map((insight, i) => (
-                        <li key={i} className="flex items-center">
-                          <ArrowRight className="h-4 w-4 text-green-400 mr-2" />
-                          <span dangerouslySetInnerHTML={{ __html: insight }} />
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </section>
-              )}
+                ))}
+              </div>
 
               <button
                 onClick={() => setResult(null)}
-                className="w-full max-w-md mx-auto px-6 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-500 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center text-sm"
+                className="mt-6 mx-auto block px-6 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all text-sm flex items-center"
               >
-                Analyze Another URL <Search className="inline h-5 w-5 ml-2" />
+                Analyze Another Site <Search className="h-5 w-5 ml-2" />
               </button>
             </div>
           )}
@@ -464,14 +340,6 @@ export default function SEOAnalysis() {
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
   .font-poppins { font-family: 'Poppins', sans-serif; }
-  .card-tilt { transition: transform 0.3s, box-shadow 0.3s; position: relative; }
-  .card-tilt:hover { transform: perspective(1000px) rotateX(5deg) rotateY(5deg) scale(1.02); box-shadow: 0 10px 20px rgba(0, 255, 0, 0.3); }
-  .card-tilt[data-tooltip]:hover:after {
-    content: attr(data-tooltip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8); color: white; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.875rem;
-    white-space: nowrap; z-index: 10; margin-bottom: 0.5rem; opacity: 0; transition: opacity 0.2s;
-  }
-  .card-tilt:hover[data-tooltip]:after { opacity: 1; }
   .animate-gradient-x { background-size: 200% 200%; animation: gradientShift 10s ease infinite; }
   .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
   .animate-bounce { animation: bounce 1s infinite; }
