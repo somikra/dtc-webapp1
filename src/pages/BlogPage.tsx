@@ -45,7 +45,7 @@ export default function BlogPage() {
       readTime: "6 min read",
       date: "Mar 10, 2025",
       fullPreview: "Organic or paid? It’s the DTC dilemma. We pit SEO and social against PPC and ads, breaking down costs, speed, and ROI. Find out which move—or combo—will turbocharge your brand without wasting time or cash.",
-      link: "/howtopriceyourproducts" // Add link property
+      link: "/organicvspaidmarketing" // Add link property
     }
   ];
 

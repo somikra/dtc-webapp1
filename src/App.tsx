@@ -17,6 +17,7 @@ import ServicesPage from './pages/ServicesPage';
 import BlogPage from './pages/BlogPage';
 import HowToGetFirstCustomer from './pages/howtogetfirstcustomer';
 import HowToPriceYourProducts from './pages/howtopriceyourproducts';
+import OrganicVsPaidMarketing from './pages/organicvspaidmarketing';
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
             <Route path="/blog" element={<BlogPage />} />
             <Route path="/howtogetfirstcustomer" element={<HowToGetFirstCustomer />} />
             <Route path="/howtopriceyourproducts" element={<HowToPriceYourProducts />} /> {/* New route added */}
+            <Route path="/organic-vs-paid-marketing" element={<OrganicVsPaidMarketing />} />
             <Route
               path="/tools-dashboard"
               element={
