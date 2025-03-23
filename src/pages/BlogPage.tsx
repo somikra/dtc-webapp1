@@ -35,6 +35,7 @@ export default function BlogPage() {
       readTime: "7 min read",
       date: "Mar 12, 2025",
       fullPreview: "Pricing’s a minefield—too low, you’re broke; too high, you’re ghosted. We’ll show you how to set prices that scream value, protect your profits, and keep customers coming back. No more race-to-the-bottom nonsense."
+      link: "/howtopriceyourproducts" // Add link property
     },
     {
       title: "Organic vs. Paid Marketing – What's Right for Your Business?",
