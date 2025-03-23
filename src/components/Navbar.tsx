@@ -7,7 +7,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isShrunk, setIsShrunk] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false); // Add state for submission status
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,23 +21,22 @@ export default function Navbar() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setIsSubmitting(true); // Show loading state
+    setIsSubmitting(true);
 
     const form = e.target;
 
-    // Send the form data using EmailJS
     emailjs
       .sendForm(
-        'service_fvu9lrj', // Replace with your EmailJS Service ID
-        'template_gf406x8', // Replace with your EmailJS Template ID
+        'service_fvu9lrj', // Replace with your EmailJS Service ID (e.g., service_abc123)
+        'template_gf406x8', // Replace with your EmailJS Template ID (e.g., template_xyz789)
         form,
-        'tdtBnqm0sor90ji7w' // Replace with your EmailJS User ID
+        'tdtBmNgm0sOr90j7w' // Your Public Key from the screenshot
       )
       .then(
         (result) => {
           alert('Thanks! We’ll reach out soon to kickstart your DTC journey.');
           setIsPopupOpen(false);
-          form.reset(); // Clear the form
+          form.reset();
         },
         (error) => {
           alert('Oops! Something went wrong. Please try again.');
@@ -45,7 +44,7 @@ export default function Navbar() {
         }
       )
       .finally(() => {
-        setIsSubmitting(false); // Reset loading state
+        setIsSubmitting(false);
       });
   };
 
@@ -257,7 +256,7 @@ export default function Navbar() {
               <div>
                 <input
                   type="text"
-                  name="name" // Add name attribute for EmailJS
+                  name="name"
                   placeholder="Your Name"
                   className="w-full px-4 py-3 rounded-full bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                   required
@@ -266,7 +265,7 @@ export default function Navbar() {
               <div>
                 <input
                   type="email"
-                  name="email" // Add name attribute for EmailJS
+                  name="email"
                   placeholder="Your Email"
                   className="w-full px-4 py-3 rounded-full bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                   required
@@ -275,14 +274,14 @@ export default function Navbar() {
               <div>
                 <input
                   type="text"
-                  name="business-name" // Add name attribute for EmailJS
+                  name="business-name"
                   placeholder="Your Business Name (optional)"
                   className="w-full px-4 py-3 rounded-full bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                 />
               </div>
               <div>
                 <select
-                  name="challenge" // Add name attribute for EmailJS
+                  name="challenge"
                   className="w-full px-4 py-3 rounded-full bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                   required
                 >
