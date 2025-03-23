@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
+import emailjs from '@emailjs/browser';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isShrunk, setIsShrunk] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Add state for submission status
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,8 +21,32 @@ export default function Navbar() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert('Thanks! We’ll reach out soon to kickstart your DTC journey.');
-    setIsPopupOpen(false);
+    setIsSubmitting(true); // Show loading state
+
+    const form = e.target;
+
+    // Send the form data using EmailJS
+    emailjs
+      .sendForm(
+        'service_fvu9lrj', // Replace with your EmailJS Service ID
+        'template_gf406x8', // Replace with your EmailJS Template ID
+        form,
+        'tdtBnqm0sor90ji7w' // Replace with your EmailJS User ID
+      )
+      .then(
+        (result) => {
+          alert('Thanks! We’ll reach out soon to kickstart your DTC journey.');
+          setIsPopupOpen(false);
+          form.reset(); // Clear the form
+        },
+        (error) => {
+          alert('Oops! Something went wrong. Please try again.');
+          console.error('EmailJS error:', error);
+        }
+      )
+      .finally(() => {
+        setIsSubmitting(false); // Reset loading state
+      });
   };
 
   return (
@@ -231,6 +257,7 @@ export default function Navbar() {
               <div>
                 <input
                   type="text"
+                  name="name" // Add name attribute for EmailJS
                   placeholder="Your Name"
                   className="w-full px-4 py-3 rounded-full bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                   required
@@ -239,6 +266,7 @@ export default function Navbar() {
               <div>
                 <input
                   type="email"
+                  name="email" // Add name attribute for EmailJS
                   placeholder="Your Email"
                   className="w-full px-4 py-3 rounded-full bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                   required
@@ -247,12 +275,14 @@ export default function Navbar() {
               <div>
                 <input
                   type="text"
+                  name="business-name" // Add name attribute for EmailJS
                   placeholder="Your Business Name (optional)"
                   className="w-full px-4 py-3 rounded-full bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                 />
               </div>
               <div>
                 <select
+                  name="challenge" // Add name attribute for EmailJS
                   className="w-full px-4 py-3 rounded-full bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                   required
                 >
@@ -268,9 +298,12 @@ export default function Navbar() {
               </div>
               <button
                 type="submit"
-                className="w-full px-6 py-3 bg-yellow-300 text-gray-900 font-semibold rounded-full hover:bg-yellow-400 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-montserrat"
+                disabled={isSubmitting}
+                className={`w-full px-6 py-3 bg-yellow-300 text-gray-900 font-semibold rounded-full hover:bg-yellow-400 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-montserrat ${
+                  isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               >
-                Let’s Crush It Together
+                {isSubmitting ? 'Submitting...' : 'Let’s Crush It Together'}
               </button>
             </form>
           </div>
