@@ -30,7 +30,7 @@ export default function Navbar() {
         'service_fvu9lrj', // Replace with your EmailJS Service ID (e.g., service_abc123)
         'template_gf406x8', // Replace with your EmailJS Template ID (e.g., template_xyz789)
         form,
-        'qnMj05dkiYsPCPYZEo8Kv' // Your Public Key from the screenshot
+        'tdtBnqm0sor90ji7w' // Your Public Key from the screenshot
       )
       .then(
         (result) => {
