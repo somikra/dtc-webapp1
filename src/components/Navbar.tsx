@@ -34,8 +34,8 @@ export default function Navbar() {
           <div className="flex items-center">
             <Link to="/" className="flex items-center group">
               <svg
-                className={`h-${isShrunk ? '8' : '10'} w-auto transition-all duration-300 group-hover:brightness-110`}
-                viewBox="0 0 200 200"
+                className={`h-${isShrunk ? '6' : '8'} w-${isShrunk ? '6' : '8'} text-yellow-300 group-hover:text-yellow-400 transition-all duration-300`}
+                viewBox="0 0 150 150"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
               >
@@ -49,47 +49,38 @@ export default function Navbar() {
 
                 {/* Rocket Shape */}
                 <path
-                  d="M100 20 L120 80 L100 120 L80 80 Z"
+                  d="M75 15 L90 60 L75 90 L60 60 Z"
                   fill="url(#grad1)"
                   stroke="#FDE047"
                   strokeWidth="5"
                 />
-                <circle cx="100" cy="50" r="10" fill="#FDE047" />
+                <circle cx="75" cy="37.5" r="7.5" fill="#FDE047" />
 
                 {/* Flames */}
-                <path d="M100 120 L90 150 L100 160 L110 150 Z" fill="#F97316" />
+                <path d="M75 90 L67.5 112.5 L75 120 L82.5 112.5 Z" fill="#F97316" />
 
                 {/* Sparkles */}
                 <path
-                  d="M130 30 L132 34 L136 35 L132 36 L130 40 L128 36 L124 35 L128 34 Z"
+                  d="M97.5 22.5 L99 25.5 L102 26.25 L99 27 L97.5 30 L96 27 L93 26.25 L96 25.5 Z"
                   fill="#FDE047"
                 />
                 <path
-                  d="M70 40 L72 44 L76 45 L72 46 L70 50 L68 46 L64 45 L68 44 Z"
+                  d="M52.5 30 L54 33 L57 33.75 L54 34.5 L52.5 37.5 L51 34.5 L48 33.75 L51 33 Z"
                   fill="#FDE047"
                 />
-
-                {/* Brand Name */}
-                <text
-                  x="50"
-                  y="170"
-                  fontFamily="'Montserrat', sans-serif"
-                  fontSize="24"
-                  fill="white"
-                  fontWeight="bold"
+              </svg>
+              <div className={`ml-${isShrunk ? '2' : '4'}`}>
+                <span
+                  className={`text-${isShrunk ? 'xl' : '3xl'} font-extrabold text-white tracking-wide group-hover:text-yellow-300 transition-all duration-300 font-montserrat`}
                 >
                   SOMIKRA
-                </text>
-                <text
-                  x="80"
-                  y="190"
-                  fontFamily="'Montserrat', sans-serif"
-                  fontSize="14"
-                  fill="#D1D5DB"
+                </span>
+                <p
+                  className={`text-${isShrunk ? 'xs' : 'sm'} font-medium text-gray-100 group-hover:text-yellow-400 transition-all duration-300 font-montserrat`}
                 >
-                  DTC
-                </text>
-              </svg>
+                  Forge Your DTC Empire
+                </p>
+              </div>
             </Link>
           </div>
 
@@ -97,25 +88,25 @@ export default function Navbar() {
           <div className="hidden md:flex items-center space-x-6">
             <Link
               to="/services"
-              className={`text-${isShrunk ? 'sm' : 'lg'} text-gray-100 hover:text-yellow-300 font-semibold tracking-wide transition-all duration-300 hover:scale-105 hover:shadow-md`}
+              className={`text-${isShrunk ? 'sm' : 'lg'} text-gray-100 hover:text-yellow-300 font-semibold tracking-wide transition-all duration-300 hover:scale-105 hover:shadow-md font-montserrat`}
             >
               Services
             </Link>
             <Link
               to="/tools"
-              className={`text-${isShrunk ? 'sm' : 'lg'} text-gray-100 hover:text-yellow-300 font-semibold tracking-wide transition-all duration-300 hover:scale-105 hover:shadow-md`}
+              className={`text-${isShrunk ? 'sm' : 'lg'} text-gray-100 hover:text-yellow-300 font-semibold tracking-wide transition-all duration-300 hover:scale-105 hover:shadow-md font-montserrat`}
             >
               Tools
             </Link>
             <Link
               to="/blog"
-              className={`text-${isShrunk ? 'sm' : 'lg'} text-gray-100 hover:text-yellow-300 font-semibold tracking-wide transition-all duration-300 hover:scale-105 hover:shadow-md`}
+              className={`text-${isShrunk ? 'sm' : 'lg'} text-gray-100 hover:text-yellow-300 font-semibold tracking-wide transition-all duration-300 hover:scale-105 hover:shadow-md font-montserrat`}
             >
               Blog
             </Link>
             <button
               onClick={togglePopup}
-              className={`text-${isShrunk ? 'sm' : 'lg'} text-gray-100 hover:text-yellow-300 font-semibold tracking-wide transition-all duration-300 hover:scale-105 hover:shadow-md`}
+              className={`text-${isShrunk ? 'sm' : 'lg'} text-gray-100 hover:text-yellow-300 font-semibold tracking-wide transition-all duration-300 hover:scale-105 hover:shadow-md font-montserrat`}
             >
               Talk to an Expert
             </button>
@@ -144,21 +135,21 @@ export default function Navbar() {
             <div className="px-4 pt-2 pb-4 space-y-2">
               <Link
                 to="/services"
-                className={`block px-4 py-2 text-${isShrunk ? 'sm' : 'lg'} text-gray-100 hover:text-yellow-300 font-semibold transition-colors duration-300`}
+                className={`block px-4 py-2 text-${isShrunk ? 'sm' : 'lg'} text-gray-100 hover:text-yellow-300 font-semibold transition-colors duration-300 font-montserrat`}
                 onClick={() => setIsOpen(false)}
               >
                 Services
               </Link>
               <Link
                 to="/tools"
-                className={`block px-4 py-2 text-${isShrunk ? 'sm' : 'lg'} text-gray-100 hover:text-yellow-300 font-semibold transition-colors duration-300`}
+                className={`block px-4 py-2 text-${isShrunk ? 'sm' : 'lg'} text-gray-100 hover:text-yellow-300 font-semibold transition-colors duration-300 font-montserrat`}
                 onClick={() => setIsOpen(false)}
               >
                 Tools
               </Link>
               <Link
                 to="/blog"
-                className={`block px-4 py-2 text-${isShrunk ? 'sm' : 'lg'} text-gray-100 hover:text-yellow-300 font-semibold transition-colors duration-300`}
+                className={`block px-4 py-2 text-${isShrunk ? 'sm' : 'lg'} text-gray-100 hover:text-yellow-300 font-semibold transition-colors duration-300 font-montserrat`}
                 onClick={() => setIsOpen(false)}
               >
                 Blog
@@ -168,7 +159,7 @@ export default function Navbar() {
                   togglePopup();
                   setIsOpen(false);
                 }}
-                className={`block w-full text-left px-4 py-2 text-${isShrunk ? 'sm' : 'lg'} text-gray-100 hover:text-yellow-300 font-semibold transition-colors duration-300`}
+                className={`block w-full text-left px-4 py-2 text-${isShrunk ? 'sm' : 'lg'} text-gray-100 hover:text-yellow-300 font-semibold transition-colors duration-300 font-montserrat`}
               >
                 Talk to an Expert
               </button>
@@ -187,10 +178,10 @@ export default function Navbar() {
             >
               <X className="h-6 w-6" />
             </button>
-            <h3 className="text-3xl font-extrabold text-white mb-4 text-center">
+            <h3 className="text-3xl font-extrabold text-white mb-4 text-center font-montserrat">
               Unleash Your DTC Potential
             </h3>
-            <p className="text-gray-100 text-center mb-6">
+            <p className="text-gray-100 text-center mb-6 font-montserrat">
               Drop your details, and our DTC gurus will hit you up with a free, no-BS consult.
             </p>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -234,7 +225,7 @@ export default function Navbar() {
               </div>
               <button
                 type="submit"
-                className="w-full px-6 py-3 bg-yellow-300 text-gray-900 font-semibold rounded-full hover:bg-yellow-400 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                className="w-full px-6 py-3 bg-yellow-300 text-gray-900 font-semibold rounded-full hover:bg-yellow-400 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-montserrat"
               >
                 Let’s Crush It Together
               </button>
