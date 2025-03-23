@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, ShoppingBag } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
+import SomikraLogo from '../assets/somikra-logo.png'; // Import the logo
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -9,7 +10,7 @@ export default function Navbar() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsShrunk(window.scrollY > 50); // Trigger shrink after 50px scroll
+      setIsShrunk(window.scrollY > 50);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -33,8 +34,10 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative flex justify-between items-center h-full">
           <div className="flex items-center">
             <Link to="/" className="flex items-center group">
-              <ShoppingBag
-                className={`h-${isShrunk ? '6' : '8'} w-${isShrunk ? '6' : '8'} text-yellow-300 group-hover:text-yellow-400 transition-all duration-300`}
+              <img
+                src={SomikraLogo}
+                alt="Somikra Logo"
+                className={`h-${isShrunk ? '8' : '10'} w-auto transition-all duration-300 group-hover:brightness-110`}
               />
               <div className={`ml-${isShrunk ? '2' : '4'}`}>
                 <span
