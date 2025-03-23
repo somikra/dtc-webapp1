@@ -13,8 +13,9 @@ import CustomerSentiment from './pages/CustomerSentiment';
 import PricingOptimizer from './pages/PricingOptimizer';
 import TrendSpotter from './pages/TrendSpotter';
 import EmailCampaign from './pages/EmailCampaign';
-import ServicesPage from './pages/ServicesPage'; // Add this import
-import BlogPage from './pages/BlogPage'; // Add this import
+import ServicesPage from './pages/ServicesPage';
+import BlogPage from './pages/BlogPage';
+import HowToGetFirstCustomer from './howtogetfirstcustomer'; // Already imported, keeping it as is
 
 export default function App() {
   return (
@@ -24,8 +25,9 @@ export default function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/tools" element={<ToolsPage />} />
-            <Route path="/services" element={<ServicesPage />} /> {/* Add this route */}
-            <Route path="/blog" element={<BlogPage />} /> {/* Add this route */}
+            <Route path="/services" element={<ServicesPage />} />
+            <Route path="/blog" element={<BlogPage />} />
+            <Route path="/howtogetfirstcustomer" element={<HowToGetFirstCustomer />} /> {/* New route added */}
             <Route
               path="/tools-dashboard"
               element={

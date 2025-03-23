@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Search, X, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom'; // Add this if using React Router
 
 export default function BlogPage() {
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -22,8 +23,10 @@ export default function BlogPage() {
       excerpt: "Learn proven strategies to acquire your first customers and build a solid foundation for your DTC brand.",
       readTime: "5 min read",
       date: "Mar 15, 2024",
-      fullPreview: "Struggling to land your first sale? We’ve got you. This guide breaks down ninja tactics to hook your initial customers—think targeted social campaigns, irresistible lead magnets, and word-of-mouth hacks. Stop waiting and start selling."
+      fullPreview: "Struggling to land your first sale? We’ve got you. This guide breaks down ninja tactics to hook your initial customers—think targeted social campaigns, irresistible lead magnets, and word-of-mouth hacks. Stop waiting and start selling.",
+      link: "/howtogetfirstcustomer" // Add link property
     },
+    // Other posts remain unchanged
     {
       title: "How to Price Your Products Without a Race to the Bottom?",
       category: "Sales Strategy",
@@ -176,12 +179,13 @@ export default function BlogPage() {
             />
             <h3 className="text-2xl font-extrabold text-yellow-300 mb-4">{selectedPost.title}</h3>
             <p className="text-gray-300 mb-6">{selectedPost.fullPreview}</p>
-            <button
+            <Link
+              to={selectedPost.link || "#"} // Use the link property if it exists
               className="w-full inline-flex items-center justify-center px-6 py-3 bg-orange-500 text-white font-semibold rounded-full hover:bg-orange-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
             >
               Read Full Post
               <ArrowRight className="ml-2 h-5 w-5" />
-            </button>
+            </Link>
           </div>
         </div>
       )}
