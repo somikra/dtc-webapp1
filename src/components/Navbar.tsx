@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
-import SomikraLogo from '../assets/somikra-logo.png'; // Import the logo
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -34,23 +33,63 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative flex justify-between items-center h-full">
           <div className="flex items-center">
             <Link to="/" className="flex items-center group">
-              <img
-                src={SomikraLogo}
-                alt="Somikra Logo"
+              <svg
                 className={`h-${isShrunk ? '8' : '10'} w-auto transition-all duration-300 group-hover:brightness-110`}
-              />
-              <div className={`ml-${isShrunk ? '2' : '4'}`}>
-                <span
-                  className={`text-${isShrunk ? 'xl' : '3xl'} font-extrabold text-white tracking-wide group-hover:text-yellow-300 transition-all duration-300`}
+                viewBox="0 0 200 200"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+              >
+                {/* Gradient Definition */}
+                <defs>
+                  <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style={{ stopColor: '#F97316', stopOpacity: 1 }} />
+                    <stop offset="100%" style={{ stopColor: '#A855F7', stopOpacity: 1 }} />
+                  </linearGradient>
+                </defs>
+
+                {/* Rocket Shape */}
+                <path
+                  d="M100 20 L120 80 L100 120 L80 80 Z"
+                  fill="url(#grad1)"
+                  stroke="#FDE047"
+                  strokeWidth="5"
+                />
+                <circle cx="100" cy="50" r="10" fill="#FDE047" />
+
+                {/* Flames */}
+                <path d="M100 120 L90 150 L100 160 L110 150 Z" fill="#F97316" />
+
+                {/* Sparkles */}
+                <path
+                  d="M130 30 L132 34 L136 35 L132 36 L130 40 L128 36 L124 35 L128 34 Z"
+                  fill="#FDE047"
+                />
+                <path
+                  d="M70 40 L72 44 L76 45 L72 46 L70 50 L68 46 L64 45 L68 44 Z"
+                  fill="#FDE047"
+                />
+
+                {/* Brand Name */}
+                <text
+                  x="50"
+                  y="170"
+                  fontFamily="'Montserrat', sans-serif"
+                  fontSize="24"
+                  fill="white"
+                  fontWeight="bold"
                 >
                   SOMIKRA
-                </span>
-                <p
-                  className={`text-${isShrunk ? 'xs' : 'sm'} font-medium text-gray-100 group-hover:text-yellow-400 transition-all duration-300`}
+                </text>
+                <text
+                  x="80"
+                  y="190"
+                  fontFamily="'Montserrat', sans-serif"
+                  fontSize="14"
+                  fill="#D1D5DB"
                 >
-                  Forge Your DTC Empire
-                </p>
-              </div>
+                  DTC
+                </text>
+              </svg>
             </Link>
           </div>
 
