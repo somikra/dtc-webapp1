@@ -22,7 +22,7 @@ export default function BlogPage() {
       image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80",
       excerpt: "Learn proven strategies to acquire your first customers and build a solid foundation for your DTC brand.",
       readTime: "5 min read",
-      date: "Mar 15, 2024",
+      date: "Mar 15, 2025",
       fullPreview: "Struggling to land your first sale? We’ve got you. This guide breaks down ninja tactics to hook your initial customers—think targeted social campaigns, irresistible lead magnets, and word-of-mouth hacks. Stop waiting and start selling.",
       link: "/howtogetfirstcustomer" // Add link property
     },
@@ -33,7 +33,7 @@ export default function BlogPage() {
       image: "https://images.unsplash.com/photo-1563986768494-4dee2763ff3f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80",
       excerpt: "Discover effective pricing strategies that maintain your margins while staying competitive in the market.",
       readTime: "7 min read",
-      date: "Mar 12, 2024",
+      date: "Mar 12, 2025",
       fullPreview: "Pricing’s a minefield—too low, you’re broke; too high, you’re ghosted. We’ll show you how to set prices that scream value, protect your profits, and keep customers coming back. No more race-to-the-bottom nonsense."
     },
     {
@@ -42,7 +42,7 @@ export default function BlogPage() {
       image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2015&q=80",
       excerpt: "Compare different marketing approaches and learn which strategy best suits your DTC brand's goals.",
       readTime: "6 min read",
-      date: "Mar 10, 2024",
+      date: "Mar 10, 2025",
       fullPreview: "Organic or paid? It’s the DTC dilemma. We pit SEO and social against PPC and ads, breaking down costs, speed, and ROI. Find out which move—or combo—will turbocharge your brand without wasting time or cash."
     }
   ];
