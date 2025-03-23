@@ -34,7 +34,7 @@ export default function BlogPage() {
       excerpt: "Discover effective pricing strategies that maintain your margins while staying competitive in the market.",
       readTime: "7 min read",
       date: "Mar 12, 2025",
-      fullPreview: "Pricing’s a minefield—too low, you’re broke; too high, you’re ghosted. We’ll show you how to set prices that scream value, protect your profits, and keep customers coming back. No more race-to-the-bottom nonsense."
+      fullPreview: "Pricing’s a minefield—too low, you’re broke; too high, you’re ghosted. We’ll show you how to set prices that scream value, protect your profits, and keep customers coming back. No more race-to-the-bottom nonsense.",
       link: "/howtopriceyourproducts" // Add link property
     },
     {
@@ -44,7 +44,8 @@ export default function BlogPage() {
       excerpt: "Compare different marketing approaches and learn which strategy best suits your DTC brand's goals.",
       readTime: "6 min read",
       date: "Mar 10, 2025",
-      fullPreview: "Organic or paid? It’s the DTC dilemma. We pit SEO and social against PPC and ads, breaking down costs, speed, and ROI. Find out which move—or combo—will turbocharge your brand without wasting time or cash."
+      fullPreview: "Organic or paid? It’s the DTC dilemma. We pit SEO and social against PPC and ads, breaking down costs, speed, and ROI. Find out which move—or combo—will turbocharge your brand without wasting time or cash.",
+      link: "/howtopriceyourproducts" // Add link property
     }
   ];
 
