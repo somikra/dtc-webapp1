@@ -15,7 +15,7 @@ import TrendSpotter from './pages/TrendSpotter';
 import EmailCampaign from './pages/EmailCampaign';
 import ServicesPage from './pages/ServicesPage';
 import BlogPage from './pages/BlogPage';
-import HowToGetFirstCustomer from './pages/howtogetfirstcustomer'; // Already imported, keeping it as is
+import HowToGetFirstCustomer from './pages/howtogetfirstcustomer';
 import HowToPriceYourProducts from './pages/howtopriceyourproducts';
 
 export default function App() {
@@ -28,7 +28,8 @@ export default function App() {
             <Route path="/tools" element={<ToolsPage />} />
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/blog" element={<BlogPage />} />
-            <Route path="/howtogetfirstcustomer" element={<HowToGetFirstCustomer />} /> {/* New route added */}
+            <Route path="/howtogetfirstcustomer" element={<HowToGetFirstCustomer />} />
+            <Route path="/howtopriceyourproducts" element={<HowToPriceYourProducts />} /> {/* New route added */}
             <Route
               path="/tools-dashboard"
               element={
