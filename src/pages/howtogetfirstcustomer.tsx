@@ -72,7 +72,7 @@ export default function HowToGetFirstCustomer() {
             </p>
             <ul className="text-gray-300 list-decimal pl-5 mb-4">
               <li><strong>Pick a Problem</strong>: What do your customers want? For soap, maybe “Glowy Skin Tips.” For snacks, “Healthy Munchies Guide.” Keep it related to what you sell.</li>
-              <li><strong>Make It</strong>: Open Google Docs (free at docs.google.com). Write 5-10 tips—short sentences, like “Use oatmeal for a DIY scrub.” Add a photo of your product. Click File > Download > PDF.</li>
+              <li><strong>Make It</strong>: Open Google Docs (free at docs.google.com). Write 5-10 tips—short sentences, like “Use oatmeal for a DIY scrub.” Add a photo of your product. Click File, then Download, then PDF.</li>
               <li><strong>Set Up a Page</strong>: Use Linktree (free at linktr.ee)—add a link titled “Get My Free Guide,” upload your PDF to Google Drive (free), and share the “Anyone with link” URL.</li>
               <li><strong>Share It</strong>: Put the Linktree in your Instagram bio or post it on Facebook: “Free guide for [problem]—grab it here!” Text 5 friends to share it too.</li>
               <li><strong>Follow Up</strong>: When someone signs up, email them the PDF. Two days later, send: “Liked the guide? My [product] makes it even better—10% off with code FIRST10.” Use Gmail or Mailchimp (free for 500 emails).</li>
@@ -155,7 +155,7 @@ export default function HowToGetFirstCustomer() {
             </ul>
             <div className="bg-gray-700 p-4 rounded-lg">
               <p className="text-yellow-300 font-semibold">Beginner Boost:</p>
-              <p className="text-gray-200">One happy sampler can turn into a loyal buyer—worth the $2 risk.</p>
+              <p className="text-gray-200">One happy sampler can turn into a loyal buyer—worth the $qt risk.</p>
             </div>
           </div>
 
