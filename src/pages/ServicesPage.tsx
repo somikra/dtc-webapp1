@@ -1,12 +1,24 @@
 import React, { useState } from 'react';
 import { Search, Share2, BarChart, Mail, PenTool, Target, X, ArrowRight } from 'lucide-react';
+import emailjs from '@emailjs/browser'; // Add EmailJS import
+import toast from 'react-hot-toast'; // Add react-hot-toast import
 
 export default function ServicesPage() {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isServicePopupOpen, setIsServicePopupOpen] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Add submitting state
+  const [challenge, setChallenge] = useState(''); // Track the selected challenge
+  const [challengeContext, setChallengeContext] = useState(''); // Track the "Something Else" context
 
-  const togglePopup = () => setIsPopupOpen(!isPopupOpen);
+  const togglePopup = () => {
+    setIsPopupOpen(!isPopupOpen);
+    if (isPopupOpen) {
+      setChallenge(''); // Reset challenge when closing popup
+      setChallengeContext(''); // Reset challenge context when closing popup
+    }
+  };
+
   const toggleServicePopup = (service) => {
     setSelectedService(service);
     setIsServicePopupOpen(!isServicePopupOpen);
@@ -14,8 +26,44 @@ export default function ServicesPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert('Thanks! We’ll reach out soon to kickstart your DTC journey.');
-    setIsPopupOpen(false);
+    setIsSubmitting(true);
+
+    const form = e.target;
+
+    emailjs
+      .sendForm(
+        'service_fvu9lrj', // Replace with your actual EmailJS Service ID
+        'template_gf406x8', // Replace with your actual EmailJS Template ID
+        form
+      )
+      .then(
+        (result) => {
+          toast.success('Thanks! We’ll reach out soon to kickstart your DTC journey.', {
+            style: {
+              background: '#10B981',
+              color: '#fff',
+              fontFamily: 'Montserrat, sans-serif',
+            },
+          });
+          setIsPopupOpen(false);
+          form.reset();
+          setChallenge(''); // Reset the dropdown
+          setChallengeContext(''); // Reset the text field
+        },
+        (error) => {
+          toast.error('Oops! Something went wrong. Please try again.', {
+            style: {
+              background: '#EF4444',
+              color: '#fff',
+              fontFamily: 'Montserrat, sans-serif',
+            },
+          });
+          console.error('EmailJS error:', error);
+        }
+      )
+      .finally(() => {
+        setIsSubmitting(false);
+      });
   };
 
   const services = [
@@ -201,42 +249,60 @@ export default function ServicesPage() {
             >
               <X className="h-6 w-6" />
             </button>
-            <h3 className="text-3xl font-extrabold text-white mb-4 text-center">
+            <h3 className="text-3xl font-extrabold text-white mb-4 text-center font-montserrat">
               Unleash Your DTC Potential
             </h3>
-            <p className="text-gray-100 text-center mb-6">
+            <p className="text-gray-100 text-center mb-6 font-montserrat">
               Drop your details, and our DTC gurus will hit you up with a free, no-BS consult.
             </p>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <input
                   type="text"
+                  name="name" // Added name attribute
                   placeholder="Your Name"
                   className="w-full px-4 py-3 rounded-full bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                   required
+                  pattern="[A-Za-z\s\-']{1,50}" // Allow letters, spaces, hyphens, and apostrophes; max 50 characters
+                  title="Name can only contain letters, spaces, hyphens, and apostrophes (max 50 characters)"
+                  onChange={(e) => {
+                    e.target.value = e.target.value.slice(0, 50); // Enforce max length
+                  }}
                 />
               </div>
               <div>
                 <input
                   type="email"
+                  name="email" // Added name attribute
                   placeholder="Your Email"
                   className="w-full px-4 py-3 rounded-full bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                   required
+                  pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" // Basic email validation
+                  title="Please enter a valid email address (e.g., example@domain.com)"
                 />
               </div>
               <div>
                 <input
                   type="text"
+                  name="business-name" // Added name attribute
                   placeholder="Your Business Name (optional)"
                   className="w-full px-4 py-3 rounded-full bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                  pattern="[A-Za-z0-9\s\-&']{0,100}" // Allow letters, numbers, spaces, hyphens, ampersands, and apostrophes; max 100 characters
+                  title="Business name can only contain letters, numbers, spaces, hyphens, ampersands, and apostrophes (max 100 characters)"
+                  onChange={(e) => {
+                    e.target.value = e.target.value.slice(0, 100); // Enforce max length
+                  }}
                 />
               </div>
               <div>
                 <select
+                  name="challenge" // Added name attribute
+                  value={challenge} // Make it controlled
+                  onChange={(e) => setChallenge(e.target.value)}
                   className="w-full px-4 py-3 rounded-full bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                   required
                 >
-                  <option value="" disabled selected>
+                  <option value="" disabled>
                     What’s Your Biggest Challenge?
                   </option>
                   <option value="launching">Launching My Store</option>
@@ -246,11 +312,35 @@ export default function ServicesPage() {
                   <option value="other">Something Else</option>
                 </select>
               </div>
+              {challenge === 'other' && (
+                <div>
+                  <textarea
+                    name="challenge-context" // Added name attribute
+                    value={challengeContext}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value.length <= 500) {
+                        setChallengeContext(value.replace(/[^A-Za-z0-9\s.,!?]/g, '')); // Allow letters, numbers, spaces, and basic punctuation
+                      }
+                    }}
+                    placeholder="Please provide more context (max 500 characters)"
+                    className="w-full px-4 py-3 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-300 resize-none"
+                    rows={3}
+                    maxLength={500}
+                  />
+                  <p className="text-sm text-gray-200 mt-1">
+                    {challengeContext.length}/500 characters
+                  </p>
+                </div>
+              )}
               <button
                 type="submit"
-                className="w-full px-6 py-3 bg-yellow-300 text-gray-900 font-semibold rounded-full hover:bg-yellow-400 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                disabled={isSubmitting}
+                className={`w-full px-6 py-3 bg-yellow-300 text-gray-900 font-semibold rounded-full hover:bg-yellow-400 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-montserrat ${
+                  isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               >
-                Let’s Crush It Together
+                {isSubmitting ? 'Submitting...' : 'Let’s Crush It Together'}
               </button>
             </form>
           </div>
