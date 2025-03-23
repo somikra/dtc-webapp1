@@ -33,8 +33,9 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative flex justify-between items-center h-full">
           <div className="flex items-center">
             <Link to="/" className="flex items-center group">
+              {/* SVG Rocket Icon */}
               <svg
-                className={`h-${isShrunk ? '6' : '8'} w-${isShrunk ? '6' : '8'} text-yellow-300 group-hover:text-yellow-400 transition-all duration-300`}
+                className={`h-${isShrunk ? '14' : '20'} w-${isShrunk ? '14' : '20'} transition-all duration-300 group-hover:brightness-125 self-start mt-1`}
                 viewBox="0 0 150 150"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -45,38 +46,80 @@ export default function Navbar() {
                     <stop offset="0%" style={{ stopColor: '#F97316', stopOpacity: 1 }} />
                     <stop offset="100%" style={{ stopColor: '#A855F7', stopOpacity: 1 }} />
                   </linearGradient>
+                  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="5" />
+                    <feOffset dx="0" dy="0" result="offsetblur" />
+                    <feComponentTransfer>
+                      <feFuncA type="linear" slope="0.7" />
+                    </feComponentTransfer>
+                    <feMerge>
+                      <feMergeNode />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
                 </defs>
 
-                {/* Rocket Shape */}
+                {/* Rocket Shape with Glow */}
                 <path
                   d="M75 15 L90 60 L75 90 L60 60 Z"
                   fill="url(#grad1)"
                   stroke="#FDE047"
                   strokeWidth="5"
+                  filter="url(#glow)"
                 />
-                <circle cx="75" cy="37.5" r="7.5" fill="#FDE047" />
+                <circle cx="75" cy="37.5" r="7.5" fill="#FDE047" filter="url(#glow)" />
 
-                {/* Flames */}
-                <path d="M75 90 L67.5 112.5 L75 120 L82.5 112.5 Z" fill="#F97316" />
+                {/* Flames with Animation */}
+                <path
+                  d="M75 90 L67.5 112.5 L75 120 L82.5 112.5 Z"
+                  fill="#F97316"
+                  filter="url(#glow)"
+                >
+                  <animate
+                    attributeName="d"
+                    values="
+                      M75 90 L67.5 112.5 L75 120 L82.5 112.5 Z;
+                      M75 90 L65 115 L75 125 L85 115 Z;
+                      M75 90 L67.5 112.5 L75 120 L82.5 112.5 Z"
+                    dur="1.5s"
+                    repeatCount="indefinite"
+                  />
+                </path>
 
-                {/* Sparkles */}
+                {/* Sparkles with Animation */}
                 <path
                   d="M97.5 22.5 L99 25.5 L102 26.25 L99 27 L97.5 30 L96 27 L93 26.25 L96 25.5 Z"
                   fill="#FDE047"
-                />
+                >
+                  <animate
+                    attributeName="opacity"
+                    values="1;0.3;1"
+                    dur="2s"
+                    repeatCount="indefinite"
+                  />
+                </path>
                 <path
                   d="M52.5 30 L54 33 L57 33.75 L54 34.5 L52.5 37.5 L51 34.5 L48 33.75 L51 33 Z"
                   fill="#FDE047"
-                />
+                >
+                  <animate
+                    attributeName="opacity"
+                    values="0.3;1;0.3"
+                    dur="2s"
+                    repeatCount="indefinite"
+                  />
+                </path>
               </svg>
-              <div className={`ml-${isShrunk ? '2' : '4'}`}>
+
+              {/* Text (Separate from SVG) */}
+              <div className={`ml-${isShrunk ? '3' : '4'}`}>
                 <span
-                  className={`text-${isShrunk ? 'xl' : '3xl'} font-extrabold text-white tracking-wide group-hover:text-yellow-300 transition-all duration-300 font-montserrat`}
+                  className={`text-${isShrunk ? 'xl' : '3xl'} font-extrabold tracking-wide text-white group-hover:scale-105 group-hover:text-yellow-400 transition-all duration-300 font-montserrat drop-shadow-xl`}
                 >
                   SOMIKRA
                 </span>
                 <p
-                  className={`text-${isShrunk ? 'xs' : 'sm'} font-medium text-gray-100 group-hover:text-yellow-400 transition-all duration-300 font-montserrat`}
+                  className={`text-${isShrunk ? 'xs' : 'sm'} font-medium text-white group-hover:scale-105 transition-all duration-300 font-montserrat drop-shadow-md`}
                 >
                   Forge Your DTC Empire
                 </p>
