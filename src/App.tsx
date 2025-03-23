@@ -16,6 +16,7 @@ import EmailCampaign from './pages/EmailCampaign';
 import ServicesPage from './pages/ServicesPage';
 import BlogPage from './pages/BlogPage';
 import HowToGetFirstCustomer from './pages/howtogetfirstcustomer'; // Already imported, keeping it as is
+import HowToPriceYourProducts from './pages/howtopriceyourproducts';
 
 export default function App() {
   return (
