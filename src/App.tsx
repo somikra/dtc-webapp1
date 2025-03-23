@@ -15,7 +15,7 @@ import TrendSpotter from './pages/TrendSpotter';
 import EmailCampaign from './pages/EmailCampaign';
 import ServicesPage from './pages/ServicesPage';
 import BlogPage from './pages/BlogPage';
-import HowToGetFirstCustomer from './howtogetfirstcustomer'; // Already imported, keeping it as is
+import HowToGetFirstCustomer from './pages/howtogetfirstcustomer'; // Already imported, keeping it as is
 
 export default function App() {
   return (
