@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react'; // Add useEffect import
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -18,11 +18,19 @@ import BlogPage from './pages/BlogPage';
 import HowToGetFirstCustomer from './pages/howtogetfirstcustomer';
 import HowToPriceYourProducts from './pages/howtopriceyourproducts';
 import OrganicVsPaidMarketing from './pages/organicvspaidmarketing';
+import emailjs from '@emailjs/browser'; // Import EmailJS
+import { Toaster } from 'react-hot-toast'; // Import Toaster
 
 export default function App() {
+  // Initialize EmailJS with your Public Key
+  useEffect(() => {
+    emailjs.init('tdtBmNgm0sOr90j7w'); // Your Public Key from EmailJS
+  }, []);
+
   return (
     <AuthProvider>
       <Router>
+        <Toaster position="top-right" toastOptions={{ duration: 5000 }} /> {/* Add Toaster */}
         <Layout>
           <Routes>
             <Route path="/" element={<LandingPage />} />
@@ -30,7 +38,7 @@ export default function App() {
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/blog" element={<BlogPage />} />
             <Route path="/howtogetfirstcustomer" element={<HowToGetFirstCustomer />} />
-            <Route path="/howtopriceyourproducts" element={<HowToPriceYourProducts />} /> {/* New route added */}
+            <Route path="/howtopriceyourproducts" element={<HowToPriceYourProducts />} />
             <Route path="/organicvspaidmarketing" element={<OrganicVsPaidMarketing />} />
             <Route
               path="/tools-dashboard"

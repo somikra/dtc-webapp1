@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import emailjs from '@emailjs/browser';
+import toast from 'react-hot-toast';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isShrunk, setIsShrunk] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [challenge, setChallenge] = useState(''); // Track the selected challenge
+  const [challengeContext, setChallengeContext] = useState(''); // Track the "Something Else" context
 
   useEffect(() => {
     const handleScroll = () => {
@@ -27,19 +30,32 @@ export default function Navbar() {
 
     emailjs
       .sendForm(
-        'service_fvu9lrj', // Replace with your EmailJS Service ID (e.g., service_abc123)
-        'template_gf406x8', // Replace with your EmailJS Template ID (e.g., template_xyz789)
-        form,
-        'tdtBnqm0sor90ji7w' // Your Public Key from the screenshot
+        'your-service-id', // Replace with your EmailJS Service ID
+        'your-template-id', // Replace with your EmailJS Template ID
+        form
       )
       .then(
         (result) => {
-          alert('Thanks! We’ll reach out soon to kickstart your DTC journey.');
+          toast.success('Thanks! We’ll reach out soon to kickstart your DTC journey.', {
+            style: {
+              background: '#10B981',
+              color: '#fff',
+              fontFamily: 'Montserrat, sans-serif',
+            },
+          });
           setIsPopupOpen(false);
           form.reset();
+          setChallenge(''); // Reset the dropdown
+          setChallengeContext(''); // Reset the text field
         },
         (error) => {
-          alert('Oops! Something went wrong. Please try again.');
+          toast.error('Oops! Something went wrong. Please try again.', {
+            style: {
+              background: '#EF4444',
+              color: '#fff',
+              fontFamily: 'Montserrat, sans-serif',
+            },
+          });
           console.error('EmailJS error:', error);
         }
       )
@@ -282,10 +298,12 @@ export default function Navbar() {
               <div>
                 <select
                   name="challenge"
+                  value={challenge}
+                  onChange={(e) => setChallenge(e.target.value)}
                   className="w-full px-4 py-3 rounded-full bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                   required
                 >
-                  <option value="" disabled selected>
+                  <option value="" disabled>
                     What’s Your Biggest Challenge?
                   </option>
                   <option value="launching">Launching My Store</option>
@@ -295,6 +313,26 @@ export default function Navbar() {
                   <option value="other">Something Else</option>
                 </select>
               </div>
+              {challenge === 'other' && (
+                <div>
+                  <textarea
+                    name="challenge-context"
+                    value={challengeContext}
+                    onChange={(e) => {
+                      if (e.target.value.length <= 500) {
+                        setChallengeContext(e.target.value);
+                      }
+                    }}
+                    placeholder="Please provide more context (max 500 characters)"
+                    className="w-full px-4 py-3 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-300 resize-none"
+                    rows={3}
+                    maxLength={500}
+                  />
+                  <p className="text-sm text-gray-200 mt-1">
+                    {challengeContext.length}/500 characters
+                  </p>
+                </div>
+              )}
               <button
                 type="submit"
                 disabled={isSubmitting}
