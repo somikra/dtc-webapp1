@@ -24,7 +24,7 @@ import { Toaster } from 'react-hot-toast'; // Import Toaster
 export default function App() {
   // Initialize EmailJS with your Public Key
   useEffect(() => {
-    emailjs.init('tdtBmNgm0sOr90j7w'); // Your Public Key from EmailJS
+    emailjs.init('tdtBnqm0sor90ji7w'); // Your Public Key from EmailJS
   }, []);
 
   return (

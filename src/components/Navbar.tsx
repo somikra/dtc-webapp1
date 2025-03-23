@@ -30,8 +30,8 @@ export default function Navbar() {
 
     emailjs
       .sendForm(
-        'your-service-id', // Replace with your EmailJS Service ID
-        'your-template-id', // Replace with your EmailJS Template ID
+        'service_fvu9lrj', // Replace with your EmailJS Service ID
+        'template_gf406x8', // Replace with your EmailJS Template ID
         form
       )
       .then(
