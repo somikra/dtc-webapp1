@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 import { Search, X, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom'; // Add this if using React Router
+import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
+import emailjs from '@emailjs/browser';
 
 export default function BlogPage() {
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [selectedPost, setSelectedPost] = useState(null);
+  const [selectedPost, setSelectedPost] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [email, setEmail] = useState('');
+  const [subscribeStatus, setSubscribeStatus] = useState('');
 
   const categories = [
     "Getting Started",
@@ -24,9 +29,8 @@ export default function BlogPage() {
       readTime: "5 min read",
       date: "Mar 15, 2025",
       fullPreview: "Struggling to land your first sale? We’ve got you. This guide breaks down ninja tactics to hook your initial customers—think targeted social campaigns, irresistible lead magnets, and word-of-mouth hacks. Stop waiting and start selling.",
-      link: "/howtogetfirstcustomer" // Add link property
+      link: "/howtogetfirstcustomer"
     },
-    // Other posts remain unchanged
     {
       title: "How to Price Your Products Without a Race to the Bottom?",
       category: "Sales Strategy",
@@ -35,7 +39,7 @@ export default function BlogPage() {
       readTime: "7 min read",
       date: "Mar 12, 2025",
       fullPreview: "Pricing’s a minefield—too low, you’re broke; too high, you’re ghosted. We’ll show you how to set prices that scream value, protect your profits, and keep customers coming back. No more race-to-the-bottom nonsense.",
-      link: "/howtopriceyourproducts" // Add link property
+      link: "/howtopriceyourproducts"
     },
     {
       title: "Organic vs. Paid Marketing – What's Right for Your Business?",
@@ -45,15 +49,20 @@ export default function BlogPage() {
       readTime: "6 min read",
       date: "Mar 10, 2025",
       fullPreview: "Organic or paid? It’s the DTC dilemma. We pit SEO and social against PPC and ads, breaking down costs, speed, and ROI. Find out which move—or combo—will turbocharge your brand without wasting time or cash.",
-      link: "/organicvspaidmarketing" // Add link property
+      link: "/organicvspaidmarketing"
     }
   ];
 
-  const filteredPosts = selectedCategory
-    ? blogPosts.filter(post => post.category === selectedCategory)
-    : blogPosts;
+  const filteredPosts = blogPosts.filter(post => {
+    const matchesCategory = selectedCategory ? post.category === selectedCategory : true;
+    const matchesSearch = searchQuery
+      ? post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
+      : true;
+    return matchesCategory && matchesSearch;
+  });
 
-  const openPreview = (post) => {
+  const openPreview = (post: any) => {
     setSelectedPost(post);
     setIsPreviewOpen(true);
   };
@@ -63,9 +72,52 @@ export default function BlogPage() {
     setSelectedPost(null);
   };
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleCategoryClick = (category: string) => {
+    setSelectedCategory(category === selectedCategory ? null : category);
+  };
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      setSubscribeStatus('Please enter an email!');
+      return;
+    }
+
+    const templateParams = {
+      subscriber_email: email,
+    };
+
+    emailjs.send(
+      import.meta.env.VITE_EMAILJS_SERVICE_ID,
+      import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+      templateParams,
+      import.meta.env.VITE_EMAILJS_USER_ID
+    )
+      .then((response) => {
+        setSubscribeStatus('Subscribed successfully! Welcome to the rebellion.');
+        setEmail('');
+        setTimeout(() => setSubscribeStatus(''), 3000);
+      })
+      .catch((error) => {
+        console.error('EmailJS failed:', error);
+        setSubscribeStatus('Oops! Failed to subscribe. Try again.');
+      });
+  };
+
   return (
     <div className="bg-gray-900 min-h-screen text-white">
-      {/* Header */}
+      <Helmet>
+        <title>DTC Blog | E-commerce Marketing & Sales Strategies</title>
+        <meta
+          name="description"
+          content="Boost your DTC business with expert e-commerce tips on marketing, sales strategies, customer experience, and growth hacks."
+        />
+      </Helmet>
+
       <div className="bg-gradient-to-r from-orange-500 to-purple-600 py-20 animate-gradient-x">
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/diagmonds.png')]"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -78,27 +130,29 @@ export default function BlogPage() {
         </div>
       </div>
 
-      {/* Search and Categories */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="relative flex-1 max-w-lg">
             <input
               type="text"
               placeholder="Search the arsenal..."
+              value={searchQuery}
+              onChange={handleSearchChange}
               className="w-full pl-12 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-full text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-300"
             />
             <Search className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
           </div>
-          <div className="flex flex-wrap gap-3">
-            {categories.map((category, index) => (
+          <div className="flex flex-wrap gap-3" style={{ position: 'relative', zIndex: 10 }}>
+            {categories.map((category) => (
               <button
-                key={index}
-                onClick={() => setSelectedCategory(category === selectedCategory ? null : category)}
-                className={`px-4 py-2 text-sm font-semibold rounded-full transition-all duration-300 ${
+                key={category}
+                onClick={() => handleCategoryClick(category)}
+                className={`px-4 py-2 text-sm font-semibold rounded-full transition-all duration-300 cursor-pointer ${
                   selectedCategory === category
                     ? 'bg-yellow-300 text-gray-900'
                     : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-yellow-300'
                 }`}
+                style={{ pointerEvents: 'auto', zIndex: 20 }}
               >
                 {category}
               </button>
@@ -107,42 +161,44 @@ export default function BlogPage() {
         </div>
       </div>
 
-      {/* Blog Posts Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredPosts.map((post, index) => (
-            <article
-              key={index}
-              className="bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
-            >
-              <img
-                src={post.image}
-                alt={post.title}
-                className="w-full h-56 object-cover transform hover:scale-105 transition-all duration-500"
-              />
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm text-yellow-300 font-semibold">{post.category}</span>
-                  <span className="text-sm text-gray-400">{post.date}</span>
+          {filteredPosts.length > 0 ? (
+            filteredPosts.map((post, index) => (
+              <article
+                key={index}
+                className="bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
+              >
+                <img
+                  src={post.image}
+                  alt={post.title}
+                  className="w-full h-56 object-cover transform hover:scale-105 transition-all duration-500"
+                />
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm text-yellow-300 font-semibold">{post.category}</span>
+                    <span className="text-sm text-gray-400">{post.date}</span>
+                  </div>
+                  <h2 className="text-xl font-bold text-white mb-3">{post.title}</h2>
+                  <p className="text-gray-300 mb-4">{post.excerpt}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-400">{post.readTime}</span>
+                    <button
+                      onClick={() => openPreview(post)}
+                      className="text-orange-500 font-semibold hover:text-orange-400 transition-colors"
+                    >
+                      Dig In →
+                    </button>
+                  </div>
                 </div>
-                <h2 className="text-xl font-bold text-white mb-3">{post.title}</h2>
-                <p className="text-gray-300 mb-4">{post.excerpt}</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-400">{post.readTime}</span>
-                  <button
-                    onClick={() => openPreview(post)}
-                    className="text-orange-500 font-semibold hover:text-orange-400 transition-colors"
-                  >
-                    Dig In →
-                  </button>
-                </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            ))
+          ) : (
+            <p className="text-gray-300 text-center col-span-full">No posts found matching your search.</p>
+          )}
         </div>
       </div>
 
-      {/* Newsletter Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="bg-gradient-to-br from-orange-500 to-purple-600 rounded-2xl p-8 text-center shadow-2xl">
           <h2 className="text-3xl font-extrabold text-white mb-4">
@@ -151,20 +207,29 @@ export default function BlogPage() {
           <p className="text-gray-100 mb-6 max-w-2xl mx-auto">
             Join the rebellion. Get exclusive strategies, insider tips, and DTC gold delivered weekly—no fluff, just results.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+          <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
             <input
               type="email"
               placeholder="Drop your email, rebel"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="flex-1 px-4 py-3 bg-white text-gray-900 placeholder-gray-500 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-300"
             />
-            <button className="px-6 py-3 bg-yellow-300 text-gray-900 font-semibold rounded-full hover:bg-yellow-400 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+            <button
+              type="submit"
+              className="px-6 py-3 bg-yellow-300 text-gray-900 font-semibold rounded-full hover:bg-yellow-400 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+            >
               Join Now
             </button>
-          </div>
+          </form>
+          {subscribeStatus && (
+            <p className={`mt-4 text-sm ${subscribeStatus.includes('Oops') ? 'text-red-300' : 'text-green-300'}`}>
+              {subscribeStatus}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Blog Post Preview Popup */}
       {isPreviewOpen && selectedPost && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
           <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 max-w-lg w-full shadow-2xl transform transition-all duration-300 scale-100 hover:scale-105">
@@ -182,7 +247,7 @@ export default function BlogPage() {
             <h3 className="text-2xl font-extrabold text-yellow-300 mb-4">{selectedPost.title}</h3>
             <p className="text-gray-300 mb-6">{selectedPost.fullPreview}</p>
             <Link
-              to={selectedPost.link || "#"} // Use the link property if it exists
+              to={selectedPost.link || "#"}
               className="w-full inline-flex items-center justify-center px-6 py-3 bg-orange-500 text-white font-semibold rounded-full hover:bg-orange-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
             >
               Read Full Post
