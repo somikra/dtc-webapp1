@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AuthModal from '../components/AuthModal';
 import { BarChart2, DollarSign, Mail, TrendingUp, Search } from 'lucide-react';
+import { Helmet } from 'react-helmet';
 
 interface Tool {
   name: string;
@@ -14,14 +15,14 @@ interface Tool {
 
 export default function ToolsPage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
-  const [selectedToolLink, setSelectedToolLink] = useState<string | null>(null); // Track the tool to redirect to after auth
+  const [selectedToolLink, setSelectedToolLink] = useState<string | null>(null);
   const { user, signIn, signUp, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (user && !loading && selectedToolLink) {
-      navigate(selectedToolLink); // Redirect to the selected tool after successful auth
-      setSelectedToolLink(null); // Reset after redirection
+      navigate(selectedToolLink);
+      setSelectedToolLink(null);
     }
   }, [user, loading, navigate, selectedToolLink]);
 
@@ -36,10 +37,10 @@ export default function ToolsPage() {
 
   const handleToolClick = (link: string) => {
     if (user) {
-      navigate(link); // Direct navigation if logged in
+      navigate(link);
     } else {
-      setSelectedToolLink(link); // Store the tool link for redirection after auth
-      setIsAuthModalOpen(true); // Open auth modal for unauthenticated users
+      setSelectedToolLink(link);
+      setIsAuthModalOpen(true);
     }
   };
 
@@ -51,9 +52,9 @@ export default function ToolsPage() {
     {
       name: 'Unleash Sales Superpowers',
       icon: BarChart2,
-      description: 'Track and skyrocket your revenue with a dashboard that’s pure DTC gold.',
+      description: 'Boost your e-commerce sales with a dashboard packed with insights.',
       features: [
-        'Real-Time Sales Tracker',
+        'Upload & Analyze Sales Data',
         'Profit Hotspots',
         'Customer Buying Trends',
         'Growth Insights That Slap',
@@ -63,9 +64,9 @@ export default function ToolsPage() {
     {
       name: 'Forecast Like a Fortune Teller',
       icon: TrendingUp,
-      description: 'See the future of your sales with AI that predicts wins for DTC champs.',
+      description: 'Master sales forecasting with next-gen tools for your business.',
       features: [
-        'AI-Powered Predictions',
+        'Next-Gen Predictions',
         'Sales Goal Smasher',
         'Trend Spotter',
         'Plan Like a Pro',
@@ -75,7 +76,7 @@ export default function ToolsPage() {
     {
       name: 'Crush the SEO Game',
       icon: Search,
-      description: 'Dominate search and flood your store with buyers using SEO that kills it.',
+      description: 'Drive traffic to your website with SEO tools that dominate search engines.',
       features: [
         'Keyword Goldmine',
         'Traffic Booster',
@@ -87,7 +88,7 @@ export default function ToolsPage() {
     {
       name: 'Price Like a Profit Ninja',
       icon: DollarSign,
-      description: 'Max out your margins with AI pricing that’s smarter than the competition.',
+      description: 'Optimize pricing for maximum profit in your e-commerce business.',
       features: [
         'Market Trend Analyzer',
         'Profit Maximizer',
@@ -99,7 +100,7 @@ export default function ToolsPage() {
     {
       name: 'Email Like a Sales Beast',
       icon: Mail,
-      description: 'Turn emails into a cash machine with campaigns that hook and convert.',
+      description: 'Turn campaigns into revenue with smart email marketing strategies.',
       features: [
         'Killer Email Flows',
         'Cart Recovery Champs',
@@ -112,17 +113,28 @@ export default function ToolsPage() {
 
   return (
     <div className="bg-gray-900 min-h-screen text-white">
+      <Helmet>
+        <title>E-commerce Tools | Boost Sales, SEO & Pricing for Your Business</title>
+        <meta
+          name="description"
+          content="Supercharge your e-commerce business with smart tools for sales analytics, forecasting, SEO, pricing optimization, and email campaigns. Free tools for entrepreneurs and digital marketing success."
+        />
+        <meta
+          name="keywords"
+          content="e commerce, business, sales, pricing, seo, website, lead, campaigns, digital marketing agency, marketing agency, advertising, entrepreneur, search engine marketing, shopify ecommerce, digital ads"
+        />
+      </Helmet>
+
       {/* Header */}
       <div className="bg-gradient-to-r from-orange-500 to-purple-600 py-20 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/diagmonds.png')]"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <h1 className="text-5xl md:text-6xl font-extrabold text-center tracking-tight">
-            Supercharge Your DTC Growth with <span className="text-yellow-300">AI Tools</span>
+            Supercharge Your E-commerce Growth with <span className="text-yellow-300">Smart Tools</span>
           </h1>
           <p className="mt-6 text-2xl font-extrabold text-gray-100 text-center max-w-3xl mx-auto tracking-wider">
-            From sales insights to email mastery, our AI-powered tools help you dominate your market and grow like a pro.
+            From sales insights to email campaigns, our next-gen tools help entrepreneurs dominate their market and boost their business.
           </p>
-          {/* Modern Trendy Callout */}
           <div className="mt-8 flex justify-center">
             <div className="relative inline-flex items-center px-6 py-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
               <span className="text-white font-bold text-sm uppercase tracking-wide">
@@ -155,7 +167,7 @@ export default function ToolsPage() {
 
       {/* Tools List */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h2 className="text-3xl font-bold text-center text-white mb-8">Explore Our AI Tools</h2>
+        <h2 className="text-3xl font-bold text-center text-white mb-8">Explore Our Smart Tools</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {tools.map((tool) => (
             <div
@@ -185,7 +197,7 @@ export default function ToolsPage() {
         isOpen={isAuthModalOpen}
         onClose={() => {
           setIsAuthModalOpen(false);
-          setSelectedToolLink(null); // Reset if modal is closed without auth
+          setSelectedToolLink(null);
         }}
         onSignIn={handleSignIn}
         onSignUp={async (email: string, password: string) => {
@@ -196,7 +208,7 @@ export default function ToolsPage() {
             throw error;
           }
         }}
-        noCreditCardRequired={true} // Pass this prop to display in the modal
+        noCreditCardRequired={true}
       />
     </div>
   );
