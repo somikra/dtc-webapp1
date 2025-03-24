@@ -1,224 +1,67 @@
-import React, { useState, ChangeEvent } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
-  Search, Loader2, LogOut, BarChart2, TrendingUp, PieChart, DollarSign, Mail,
-  AlertTriangle, ArrowRight, Info,
+  Search, LogOut, BarChart2, TrendingUp, PieChart, DollarSign, Mail, X,
 } from 'lucide-react';
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-
-interface SEOData {
-  url: string;
-}
-
-interface SEOIssue {
-  type: string;
-  severity: 'Critical' | 'High' | 'Medium' | 'Low';
-  description: string;
-  recommendation: string;
-}
-
-interface SEOResult {
-  url: string;
-  overallScore: number;
-  issues: SEOIssue[];
-  insights: string[];
-  actionPlan: string[];
-}
+import emailjs from '@emailjs/browser';
+import toast from 'react-hot-toast';
 
 export default function SEOAnalysis() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-
-  const [loading, setLoading] = useState<boolean>(false);
-  const [result, setResult] = useState<SEOResult | null>(null);
-  const [seoData, setSeoData] = useState<SEOData>({ url: '' });
-  const [error, setError] = useState<string | null>(null);
-  const [showScoreInfo, setShowScoreInfo] = useState<boolean>(false);
-
-  const handleSEOAnalysis = async () => {
-    if (!seoData.url || !isValidUrl(seoData.url)) {
-      setError('Please enter a valid website URL (e.g., https://yourdtcstore.com).');
-      setResult(null);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    setResult(null);
-
-    try {
-      const response = await analyzeSEO(seoData.url);
-      setResult(response);
-    } catch (err) {
-      setError(`Failed to analyze SEO: ${err.message || 'Unknown error'}. Check your URL and try again.`);
-      setResult(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const isValidUrl = (url: string) => {
-    const pattern = /^(https?:\/\/)?([\w\d-]+\.)+[\w\d]{2,}(\/.*)?$/i;
-    return pattern.test(url);
-  };
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [challenge, setChallenge] = useState('');
+  const [challengeContext, setChallengeContext] = useState('');
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/tools');
   };
 
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setSeoData({ url: e.target.value });
-  };
+  const togglePopup = () => setIsPopupOpen(!isPopupOpen);
 
-  const analyzeSEO = async (url: string): Promise<SEOResult> => {
-    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-    const targetUrl = url.startsWith('http') ? url : `https://${url}`;
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
 
-    let html;
-    try {
-      const response = await axios.get(`${proxyUrl}${targetUrl}`, {
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        timeout: 10000,
-      });
-      html = response.data;
-    } catch (err) {
-      html = '<html><body>Sample content for analysis</body></html>';
-    }
+    const form = e.target;
 
-    const $ = cheerio.load(html);
-
-    // Check if running on Vercel (or a non-StackBlitz environment with API key)
-    const isVercel = process.env.VERCEL === '1' && process.env.XAI_API_KEY;
-    if (isVercel) {
-      try {
-        const { createXAI } = await import('@ai-sdk/xai');
-        const xai = createXAI({ apiKey: process.env.XAI_API_KEY });
-
-        const grokResponse = await xai.chat.completions.create({
-          model: 'grok',
-          messages: [
-            {
-              role: 'user',
-              content: `Analyze this website HTML for SEO performance: ${html}. Provide insights on page load speed, mobile optimization, and backlinks in a structured format like: "Score: X, Load Time: Ys, Mobile: Z, Backlinks: N".`,
+    emailjs
+      .sendForm(
+        'service_fvu9lrj', // Replace with your EmailJS Service ID
+        'template_gf406x8', // Replace with your EmailJS Template ID
+        form
+      )
+      .then(
+        (result) => {
+          toast.success('Thanks! We’ll reach out soon to kickstart your DTC journey.', {
+            style: {
+              background: '#10B981',
+              color: '#fff',
+              fontFamily: 'Poppins, sans-serif', // Adjusted to match site font
             },
-          ],
-        });
-
-        const insightsText = grokResponse.choices[0].message.content;
-        const overallScore = parseInt(insightsText.match(/Score: (\d+)/)?.[1] || '75');
-        const pageLoadTime = parseFloat(insightsText.match(/Load Time: ([\d.]+)/)?.[1] || '2.0');
-        const mobileScore = insightsText.includes('Mobile: Good') ? 'Good' : 'Poor';
-        const backlinks = parseInt(insightsText.match(/Backlinks: (\d+)/)?.[1] || '10');
-
-        const issues: SEOIssue[] = [];
-        if (pageLoadTime > 2.5) {
-          issues.push({
-            type: 'Page Load Speed',
-            severity: 'High',
-            description: `Your e-commerce site loads in ${pageLoadTime}s, slowing down sales.`,
-            recommendation: 'Optimize images and use a CDN for faster web page design.',
           });
-        }
-        if (backlinks < 10) {
-          issues.push({
-            type: 'Backlinks',
-            severity: 'High',
-            description: `Only ${backlinks} backlinks found—weak for search engine marketing.`,
-            recommendation: 'Boost your business with affiliate marketing programs and guest blogs.',
+          setIsPopupOpen(false);
+          form.reset();
+          setChallenge('');
+          setChallengeContext('');
+        },
+        (error) => {
+          toast.error('Oops! Something went wrong. Please try again.', {
+            style: {
+              background: '#EF4444',
+              color: '#fff',
+              fontFamily: 'Poppins, sans-serif',
+            },
           });
+          console.error('EmailJS error:', error);
         }
-        if (mobileScore === 'Poor') {
-          issues.push({
-            type: 'Mobile Optimization',
-            severity: 'Critical',
-            description: 'Poor mobile performance hurts Shopify e-commerce traffic.',
-            recommendation: 'Hire a freelance web developer for responsive design.',
-          });
-        }
-
-        const insights = [
-          `SEO Score: ${overallScore}/100—${overallScore > 80 ? 'Great for DTC sales!' : 'Improve for better leads!'}`,
-          `Page Load: ${pageLoadTime}s—${pageLoadTime > 2 ? 'Speed up your website!' : 'Optimized for users!'}`,
-          `Backlinks: ${backlinks}—${backlinks < 20 ? 'Grow with advertising!' : 'Solid for rankings!'}`,
-          `Mobile: ${mobileScore}—${mobileScore === 'Poor' ? 'Fix for e-commerce success!' : 'Ready for campaigns!'}`,
-        ];
-
-        const actionPlan = [
-          overallScore < 80 ? 'Enhance SEO for your business: Fix mobile and speed issues in 2 weeks.' : 'Leverage your score: Start a Snapchat ads campaign.',
-          backlinks < 20 ? 'Build backlinks: Partner with a digital marketing agency for 10+ links.' : 'Strengthen authority: Pitch to portfolio sites.',
-          pageLoadTime > 2 ? 'Cut load time: Optimize for search engine marketing.' : 'Refine UX: Test video ads.',
-          mobileScore === 'Poor' ? 'Go mobile-first: Critical for DTC entrepreneurs.' : 'Boost conversions: Add WhatsApp campaigns.',
-        ];
-
-        return { url, overallScore, issues, insights, actionPlan };
-      } catch (grokError) {
-        console.error('Grok analysis failed, falling back to mock:', grokError);
-      }
-    }
-
-    // Fallback for StackBlitz or if Grok fails
-    const hash = (str: string) => {
-      let h = 0;
-      for (let i = 0; i < str.length; i++) {
-        h = Math.imul(31, h) + str.charCodeAt(i) | 0;
-      }
-      return Math.abs(h);
-    };
-    const seed = hash(targetUrl);
-
-    const pageLoadTime = parseFloat(((seed % 30) / 10 + 1).toFixed(1));
-    const backlinks = seed % 50;
-    const mobileScore = (seed % 2 === 0) ? 'Good' : 'Poor';
-
-    const loadScore = Math.max(0, 100 - (pageLoadTime - 1) * 20);
-    const linkScore = Math.min(100, backlinks * 2);
-    const mobileValue = mobileScore === 'Good' ? 100 : 40;
-    const overallScore = Math.floor((loadScore + linkScore + mobileValue) / 3);
-
-    const issues: SEOIssue[] = [];
-    if (pageLoadTime > 2.5) {
-      issues.push({
-        type: 'Page Load Speed',
-        severity: 'High',
-        description: `Your e-commerce site loads in ${pageLoadTime}s, slowing down sales.`,
-        recommendation: 'Optimize images and use a CDN for faster web page design.',
+      )
+      .finally(() => {
+        setIsSubmitting(false);
       });
-    }
-    if (backlinks < 10) {
-      issues.push({
-        type: 'Backlinks',
-        severity: 'High',
-        description: `Only ${backlinks} backlinks found—weak for search engine marketing.`,
-        recommendation: 'Boost your business with affiliate marketing programs and guest blogs.',
-      });
-    }
-    if (mobileScore === 'Poor') {
-      issues.push({
-        type: 'Mobile Optimization',
-        severity: 'Critical',
-        description: 'Poor mobile performance hurts Shopify e-commerce traffic.',
-        recommendation: 'Hire a freelance web developer for responsive design.',
-      });
-    }
-
-    const insights = [
-      `SEO Score: ${overallScore}/100—${overallScore > 80 ? 'Great for DTC sales!' : 'Improve for better leads!'}`,
-      `Page Load: ${pageLoadTime}s—${pageLoadTime > 2 ? 'Speed up your website!' : 'Optimized for users!'}`,
-      `Backlinks: ${backlinks}—${backlinks < 20 ? 'Grow with advertising!' : 'Solid for rankings!'}`,
-      `Mobile: ${mobileScore}—${mobileScore === 'Poor' ? 'Fix for e-commerce success!' : 'Ready for campaigns!'}`,
-    ];
-
-    const actionPlan = [
-      overallScore < 80 ? 'Enhance SEO for your business: Fix mobile and speed issues in 2 weeks.' : 'Leverage your score: Start a Snapchat ads campaign.',
-      backlinks < 20 ? 'Build backlinks: Partner with a digital marketing agency for 10+ links.' : 'Strengthen authority: Pitch to portfolio sites.',
-      pageLoadTime > 2 ? 'Cut load time: Optimize for search engine marketing.' : 'Refine UX: Test video ads.',
-      mobileScore === 'Poor' ? 'Go mobile-first: Critical for DTC entrepreneurs.' : 'Boost conversions: Add WhatsApp campaigns.',
-    ];
-
-    return { url, overallScore, issues, insights, actionPlan };
   };
 
   return (
@@ -274,146 +117,129 @@ export default function SEOAnalysis() {
         </div>
       </nav>
 
-      {/* Main Content */}
+      {/* Main Content - Work in Progress */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl p-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Website SEO Analysis for DTC Success
+        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl p-8 text-center">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            SEO Analysis <span className="text-yellow-300">Coming Soon</span>
           </h2>
-
-          {!result && (
-            <div className="max-w-md mx-auto">
-              <Search className="h-16 w-16 text-yellow-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-200 mb-2 text-center">
-                Optimize Your E-commerce Website
-              </h3>
-              <p className="text-gray-400 mb-6 text-center">
-                Get SEO insights to drive sales, leads, and backlinks for your DTC business!
-              </p>
-              <input
-                type="text"
-                placeholder="https://yourdtcstore.com"
-                value={seoData.url}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 bg-gray-700 border rounded-full text-white placeholder-gray-400 focus:ring-2 focus:ring-yellow-300"
-              />
-              <button
-                onClick={handleSEOAnalysis}
-                disabled={loading}
-                className="w-full px-6 py-3 mt-4 bg-orange-500 text-white rounded-full hover:bg-orange-600 flex items-center justify-center disabled:bg-gray-500"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-6 w-6 animate-spin mr-2" /> Analyzing...
-                  </>
-                ) : (
-                  <>
-                    Analyze SEO Now! <Search className="h-5 w-5 ml-2" />
-                  </>
-                )}
-              </button>
-            </div>
-          )}
-
-          {error && (
-            <div className="bg-red-600 p-4 rounded-xl mb-6 text-white">
-              <p>{error}</p>
-            </div>
-          )}
-
-          {result && (
-            <div className="space-y-12">
-              <section>
-                <h3 className="text-2xl font-bold text-yellow-300 mb-6 flex items-center">
-                  SEO Overview <PieChart className="h-6 w-6 ml-2" />
-                </h3>
-                <div className="flex items-center space-x-4 bg-gray-700 p-6 rounded-2xl relative">
-                  <div>
-                    <h4 className="text-lg font-bold text-white mb-2 flex items-center">
-                      Overall Score
-                      <Info
-                        className="h-4 w-4 ml-2 text-gray-400 cursor-pointer"
-                        onClick={() => setShowScoreInfo(!showScoreInfo)}
-                      />
-                    </h4>
-                    <p className="text-2xl font-bold text-white">{result.overallScore}/100</p>
-                    <p className="text-sm text-gray-400">{result.overallScore > 80 ? 'Great for sales!' : 'Boost your ranking!'}</p>
-                  </div>
-                  {showScoreInfo && (
-                    <div className="absolute top-full left-0 mt-2 bg-gray-800 text-white p-2 rounded-md text-sm z-10">
-                      Score is calculated based on page speed, mobile optimization, and number of backlinks.
-                    </div>
-                  )}
-                </div>
-              </section>
-
-              {result.issues.length > 0 && (
-                <section>
-                  <h3 className="text-2xl font-bold text-yellow-300 mb-6 flex items-center">
-                    SEO Issues <AlertTriangle className="h-6 w-6 ml-2" />
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {result.issues.map((issue, index) => (
-                      <div key={index} className="bg-gray-700 p-6 rounded-2xl">
-                        <div className="flex items-center mb-2">
-                          <AlertTriangle className={`h-5 w-5 mr-2 text-${issue.severity === 'Critical' ? 'red' : issue.severity === 'High' ? 'orange' : 'yellow'}-500`} />
-                          <h4 className="text-lg font-bold text-white">{issue.type}</h4>
-                        </div>
-                        <p className="text-gray-300 text-sm">Severity: {issue.severity}</p>
-                        <p className="text-gray-300 text-sm">{issue.description}</p>
-                        <p className="text-gray-400 text-sm mt-2">Fix: ${issue.recommendation}</p>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {result.actionPlan.length > 0 && (
-                <section>
-                  <h3 className="text-2xl font-bold text-yellow-300 mb-6 flex items-center">
-                    Action Plan <TrendingUp className="h-6 w-6 ml-2" />
-                  </h3>
-                  <div className="bg-gray-700 p-6 rounded-2xl">
-                    <ul className="list-none text-gray-300 text-sm space-y-2">
-                      {result.actionPlan.map((action, i) => (
-                        <li key={i} className="flex items-center">
-                          <ArrowRight className="h-4 w-4 text-green-400 mr-2" />
-                          <span>{action}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </section>
-              )}
-
-              {result.insights.length > 0 && (
-                <section>
-                  <h3 className="text-2xl font-bold text-yellow-300 mb-6 flex items-center">
-                    Marketing Insights <svg className="h-6 w-6 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
-                  </h3>
-                  <div className="bg-gray-700 p-6 rounded-2xl">
-                    <ul className="list-none text-gray-300 text-sm space-y-2">
-                      {result.insights.map((insight, i) => (
-                        <li key={i} className="flex items-center">
-                          <ArrowRight className="h-4 w-4 text-green-400 mr-2" />
-                          <span>{insight}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </section>
-              )}
-
-              <button
-                onClick={() => setResult(null)}
-                className="w-full max-w-md mx-auto px-6 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-500 flex items-center justify-center"
-              >
-                Analyze Another Website <Search className="h-5 w-5 ml-2" />
-              </button>
-            </div>
-          )}
+          <div className="relative flex justify-center mb-8">
+            <div className="w-32 h-32 bg-gradient-to-r from-orange-500 to-purple-600 rounded-full animate-pulse opacity-50 absolute"></div>
+            <svg className="w-24 h-24 text-yellow-300 animate-spin-slow relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </div>
+          <p className="text-xl text-gray-300 mb-6 max-w-2xl mx-auto">
+            We’re crafting something epic for your DTC business! Our SEO Analysis tool is under construction—stay tuned for game-changing insights to skyrocket your e-commerce success.
+          </p>
+          <div className="flex justify-center space-x-4">
+            <a href="/tools" className="px-6 py-3 bg-gradient-to-r from-orange-500 to-yellow-400 text-white rounded-full font-semibold hover:from-orange-600 hover:to-yellow-500 transition-all duration-300 flex items-center">
+              Explore Other Tools <TrendingUp className="h-5 w-5 ml-2" />
+            </a>
+            <button onClick={togglePopup} className="px-6 py-3 bg-gradient-to-r from-purple-600 to-orange-500 text-white rounded-full font-semibold hover:from-purple-700 hover:to-orange-600 transition-all duration-300 flex items-center">
+              Connect with Us <Mail className="h-5 w-5 ml-2" />
+            </button>
+          </div>
+          <div className="mt-8 text-gray-500 text-sm">
+            <p>Building the future of DTC growth, one pixel at a time.</p>
+          </div>
         </div>
       </main>
+
+      {/* Contact Popup - Synced with Navbar */}
+      {isPopupOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div className="relative bg-gradient-to-br from-orange-500 to-purple-600 rounded-2xl p-8 max-w-md w-full shadow-2xl transform transition-all duration-300 scale-100 hover:scale-105">
+            <button
+              onClick={togglePopup}
+              className="absolute top-4 right-4 text-white hover:text-yellow-300 transition-colors"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <h3 className="text-3xl font-extrabold text-white mb-4 text-center">
+              Unleash Your DTC Potential
+            </h3>
+            <p className="text-gray-100 text-center mb-6">
+              Drop your details, and our DTC gurus will hit you up with a free, no-BS consult.
+            </p>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Your Name"
+                  className="w-full px-4 py-3 rounded-full bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                  required
+                />
+              </div>
+              <div>
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Your Email"
+                  className="w-full px-4 py-3 rounded-full bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                  required
+                />
+              </div>
+              <div>
+                <input
+                  type="text"
+                  name="business-name"
+                  placeholder="Your Business Name (optional)"
+                  className="w-full px-4 py-3 rounded-full bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                />
+              </div>
+              <div>
+                <select
+                  name="challenge"
+                  value={challenge}
+                  onChange={(e) => setChallenge(e.target.value)}
+                  className="w-full px-4 py-3 rounded-full bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                  required
+                >
+                  <option value="" disabled>
+                    What’s Your Biggest Challenge?
+                  </option>
+                  <option value="launching">Launching My Store</option>
+                  <option value="sales">Boosting Sales</option>
+                  <option value="marketing">Nailing Marketing</option>
+                  <option value="seo">Fixing SEO</option>
+                  <option value="other">Something Else</option>
+                </select>
+              </div>
+              {challenge === 'other' && (
+                <div>
+                  <textarea
+                    name="challenge-context"
+                    value={challengeContext}
+                    onChange={(e) => {
+                      if (e.target.value.length <= 500) {
+                        setChallengeContext(e.target.value);
+                      }
+                    }}
+                    placeholder="Please provide more context (max 500 characters)"
+                    className="w-full px-4 py-3 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-300 resize-none"
+                    rows={3}
+                    maxLength={500}
+                  />
+                  <p className="text-sm text-gray-200 mt-1">
+                    {challengeContext.length}/500 characters
+                  </p>
+                </div>
+              )}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`w-full px-6 py-3 bg-yellow-300 text-gray-900 font-semibold rounded-full hover:bg-yellow-400 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ${
+                  isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                {isSubmitting ? 'Submitting...' : 'Let’s Crush It Together'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -422,6 +248,8 @@ export default function SEOAnalysis() {
 const styles = `
   .font-poppins { font-family: 'Poppins', sans-serif; }
   .card-tilt:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0, 255, 0, 0.2); }
+  .animate-spin-slow { animation: spin 3s linear infinite; }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 `;
 const styleSheet = document.createElement('style');
 styleSheet.textContent = styles;
