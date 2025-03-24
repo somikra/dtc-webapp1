@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowRight, Rocket, BarChart, Zap, Award, ShoppingBag, Users, X, TrendingUp, Search, DollarSign, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet'; // Make sure this is installed: npm install react-helmet
 
 export default function LandingPage() {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -16,6 +17,15 @@ export default function LandingPage() {
 
   return (
     <div className="flex flex-col">
+      {/* Helmet for SEO Metadata */}
+      <Helmet>
+        <title>E-commerce Success | Digital Marketing Agency for DTC Entrepreneurs</title>
+        <meta
+          name="description"
+          content="Launch your e-commerce business with our digital marketing agency. Boost sales with tools like sales dashboards, SEO analysis, and advertising campaigns."
+        />
+      </Helmet>
+
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-orange-500 via-red-500 to-purple-600 text-white py-28 overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/diagmonds.png')]"></div>
@@ -23,14 +33,15 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div>
               <h1 className="text-5xl md:text-6xl font-extrabold leading-tight tracking-tight">
-                Launch Your DTC Empire <span className="text-yellow-300">Today</span>
+                Launch Your DTC <span className="text-yellow-300">E-commerce</span> Empire Today
               </h1>
               <p className="mt-6 text-xl text-gray-100 leading-relaxed">
-                Overwhelmed by starting an online store? We’ve got your back with badass tools, killer marketing, and insider know-how to skyrocket your sales.
+                Overwhelmed by starting an online store? We’ve got your back with badass tools like sales dashboards, killer digital marketing campaigns, and insider know-how to skyrocket your Shopify ecommerce website sales with targeted ads.
               </p>
               <div className="mt-8 flex flex-col sm:flex-row gap-4">
                 <Link
                   to="/services"
+                  onClick={() => window.scrollTo(0, 0)} // Scroll to top fix
                   className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold rounded-full bg-yellow-300 text-gray-900 hover:bg-yellow-400 shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
                 >
                   Kickstart Now
@@ -72,28 +83,28 @@ export default function LandingPage() {
               <Rocket className="h-12 w-12 text-yellow-300 mb-6" />
               <h3 className="text-2xl font-bold text-white">Launch Like a Pro</h3>
               <p className="mt-4 text-gray-300">
-                Skip the rookie mistakes. Our playbook gets your store live and selling in record time.
+                Skip the rookie mistakes. Our playbook gets your Shopify ecommerce store live with a website optimized for search engine marketing.
               </p>
             </div>
             <div className="bg-gray-800 rounded-xl p-8 hover:bg-gray-700 transition-colors duration-300">
               <BarChart className="h-12 w-12 text-yellow-300 mb-6" />
               <h3 className="text-2xl font-bold text-white">Master Your Numbers</h3>
               <p className="mt-4 text-gray-300">
-                Sales dashboards and forecasts that turn data into dollars—no PhD required.
+                Sales dashboards and forecasts that turn data into dollars—no PhD or freelance web developer required.
               </p>
             </div>
             <div className="bg-gray-800 rounded-xl p-8 hover:bg-gray-700 transition-colors duration-300">
               <Zap className="h-12 w-12 text-yellow-300 mb-6" />
               <h3 className="text-2xl font-bold text-white">Market Like a Beast</h3>
               <p className="mt-4 text-gray-300">
-                SEO audits, ad hacks, and automation to flood your store with buyers.
+                Boost your site with SEO audits, backlinks, and YouTube ads to flood your store with buyers.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Free Tools Promotion (Updated to match ToolsPage) */}
+      {/* Free Tools Promotion */}
       <section className="py-16 bg-gradient-to-br from-yellow-400 to-orange-500 text-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-12 overflow-hidden">
@@ -103,7 +114,7 @@ export default function LandingPage() {
                   Steal Our <span className="text-orange-500">Free Tools</span> Now
                 </h2>
                 <p className="text-xl text-gray-700 mb-6 font-medium">
-                  No catch. Unlock a powerhouse of tools that top DTC brands rely on to dominate the game!
+                  No catch. Unlock a powerhouse of tools—sales dashboards, pricing optimizers, and video ads strategies—that top DTC brands rely on to dominate the game!
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <Link to="/tools-dashboard" className="relative group bg-gradient-to-br from-gray-100 to-white p-4 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
@@ -185,11 +196,12 @@ export default function LandingPage() {
             Stop Dreaming. Start Selling.
           </h2>
           <p className="text-xl text-gray-100 mb-8 max-w-2xl mx-auto">
-            Your DTC breakthrough is one click away. Join the rebels crushing it online.
+            Your DTC breakthrough is one click away. Join the rebels crushing it online with our marketing agency, driving leads and sales.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/services"
+              onClick={() => window.scrollTo(0, 0)} // Scroll to top fix
               className="inline-flex items-center justify-center px-10 py-4 text-lg font-semibold rounded-full bg-yellow-300 text-gray-900 hover:bg-yellow-400 shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
             >
               Launch Now
